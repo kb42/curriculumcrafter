@@ -1,4 +1,6 @@
-# team016 -- Indianess of 411
+# team016-Indianess of 411
+
+## Basic Information
 
 | Name                | Email                       | Role       |
 |---------------------|-----------------------------|------------|
@@ -6,3 +8,15 @@
 | Vashishth Goswami   | vgosw2@illinois.edu         | Member     |
 | Karthik Bagavathy   | kb42@illinois.edu           | Member     |
 | Harshita Thota      | hthota3@illinois.edu        | Member     |
+
+## Project Information
+
+|   Info      |        Description     |
+| ----------- | ---------------------- |
+|  Title      |       ProjectTitle     |
+| System URL  |      link_to_system    |
+| Video Link  |      link_to_video     |
+
+## Project Summary
+
+This is a summary of the project!
