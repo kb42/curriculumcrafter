@@ -30,7 +30,9 @@ We will also have the map offer real-time updates as students adjust their cours
 The project will leverage a variety of datasets in order to obtain data for comprehensive academic and college course planning. The primary dataset will include AP course credit, Course explorer, and the proficiency test from several different UIUC related web pages. These sources provide data regarding course prerequisites, credits, and course descriptions, which will then be formatted into a csv file format. The expected data size will be all of the courses offered at UIUC (course explorer), the list of AP courses (AP credit page), and list of proficiency exams (proficiency exam page).  
 In addition, for the transfer course support, we will also be sending requests to transferology given the user’s provided transfer courses. The transferology platform will help with identifying transfer possibilities for certain courses from other institutions. This external dataset will be accessed via API requests, and will add to the internal UIUC data to provide a holistic view of each student's academic progress, especially for transfer students. These following datasets ensure that all of the student’s academic progress and future academic goals are taken into account while developing a comprehensive course map.
 
-# Usefulness: Every student encounters stress every semester as they try to figure out what to register for and how to plan their degree. And by creating this web tool, we hoped to expedite that process and provide better visualization so that students could complete the prerequisites on time and avoid a stressful and heavy semester with difficult classes. We are attempting to provide options such as adding minors or socializing courses. The course department provides a course map, but it is generalized for all students in that major and does not account for minors, whereas our online app is tailored and offers to graduate in an efficient timeline while completing the degree requirement.
+# Usefulness: 
+
+Every student encounters stress every semester as they try to figure out what to register for and how to plan their degree. And by creating this web tool, we hoped to expedite that process and provide better visualization so that students could complete the prerequisites on time and avoid a stressful and heavy semester with difficult classes. We are attempting to provide options such as adding minors or socializing courses. The course department provides a course map, but it is generalized for all students in that major and does not account for minors, whereas our online app is tailored and offers to graduate in an efficient timeline while completing the degree requirement.
 
 # Data Sources:
 
@@ -43,6 +45,13 @@ The API score conversions would let the initial setup be easier as it can see wh
 This app helps students efficiently plan their course schedules based on their academic history and goals. Users can create, update, and manage their course plans by entering desired courses and reviewing their academic history. The platform visualizes course prerequisites and sequences on an interactive map. This helps students understand how their choices fit into their overall academic plan and make informed decisions about their path to graduation.
 
 The UI will include a dashboard for progress tracking, a course planner for managing course selections, and a search bar for finding relevant courses. The project work will be divided among team members, with responsibilities for frontend development, backend systems, and project management. This structured approach will ensure the application’s effective functionality and integration.
+
+# Work Distribution:
+
+1. Kundan Mergu: Frontend Development, UI/UX Design, Data Visualization
+2. Vashishth Goswami: Backend Development, Data Integration, API Requests
+3. Karthik Bagavathy: Data Collection, Data Cleaning, Data Analysis
+4. Harshita Thota: Project Management, Documentation, Testing, Product Design
 
 **Data Source links:**
 
