@@ -45,6 +45,7 @@ The API score conversions would let the initial setup be easier as it can see wh
 This app helps students efficiently plan their course schedules based on their academic history and goals. Users can create, update, and manage their course plans by entering desired courses and reviewing their academic history. The platform visualizes course prerequisites and sequences on an interactive map. This helps students understand how their choices fit into their overall academic plan and make informed decisions about their path to graduation.
 
 The UI will include a dashboard for progress tracking, a course planner for managing course selections, and a search bar for finding relevant courses. The project work will be divided among team members, with responsibilities for frontend development, backend systems, and project management. This structured approach will ensure the application’s effective functionality and integration.
+![My Local Image](./image/curriculum_crafter.png)
 
 # Work Distribution:
 
