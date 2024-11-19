@@ -166,9 +166,8 @@ LIMIT 15;
 
 ```sql
 **Recommended Indexes:**
-1. CREATE INDEX idx_requirement_majorid ON Requirement (MajorID);
-2. CREATE INDEX idx_student_majorid ON Student (MajorID);
--- 3. CREATE INDEX idx_planned_course_semester ON Planned_Course (Semester);
+1. CREATE INDEX idx_course_catalog_courseID ON Course_Catalog(CourseID);
+3. CREATE INDEX idx_planned_course_semester ON Planned_Course (Semester);
 ```
 
 ### For query 4
