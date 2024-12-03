@@ -96,14 +96,17 @@ def get_plan(planid):
 
 @app.route('/api/course/<courseid>/prerequisites', methods=['GET'])
 def get_prerequisites(courseid):
-    query = """
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
         SELECT p.CourseID, p.PrerequisiteID, c.Credits AS PrerequisiteCredits
         FROM Prerequisite p
         JOIN Course_Catalog c ON p.PrerequisiteID = c.CourseID
         WHERE p.CourseID = ?
-    """
-    prerequisites = execute_query(query, (courseid,))
-    return jsonify(prerequisites)
+    """, (courseid,))
+    rows = cursor.fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in rows])
 
 @app.route('/api/create-account', methods=['POST'])
 def create_account():
@@ -137,15 +140,14 @@ def create_account():
 
 @app.route('/api/courses/search', methods=['GET'])
 def search_courses():
-    search_term = request.args.get('q', '').lower()
-    query = """
-        SELECT CourseID 
-        FROM Course_Catalog 
-        WHERE LOWER(CourseID) LIKE ?
-        LIMIT 50
-    """
-    courses = execute_query(query, (f"%{search_term}%",))
-    return jsonify(courses)
+    query = request.args.get('q', '').lower()
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT CourseID FROM Course_Catalog WHERE LOWER(CourseID) LIKE ?", (f"%{query}%",))
+    courses = cursor.fetchall()
+    conn.close()
+    return jsonify([dict(course) for course in courses])
+
 
 if __name__ == '__main__':
     app.run(debug=True)
