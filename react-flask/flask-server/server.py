@@ -96,17 +96,14 @@ def get_plan(planid):
 
 @app.route('/api/course/<courseid>/prerequisites', methods=['GET'])
 def get_prerequisites(courseid):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("""
+    query = """
         SELECT p.CourseID, p.PrerequisiteID, c.Credits AS PrerequisiteCredits
         FROM Prerequisite p
         JOIN Course_Catalog c ON p.PrerequisiteID = c.CourseID
         WHERE p.CourseID = ?
-    """, (courseid,))
-    rows = cursor.fetchall()
-    conn.close()
-    return jsonify([dict(row) for row in rows])
+    """
+    prerequisites = execute_query(query, (courseid,))
+    return jsonify(prerequisites)
 
 @app.route('/api/create-account', methods=['POST'])
 def create_account():
@@ -138,15 +135,100 @@ def create_account():
     except sqlite3.IntegrityError as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
+@app.route('/api/login', methods=['POST'])
+def login():
+    """
+    Validate login credentials by checking the Student table.
+    """
+    data = request.get_json()
+    netid = data.get('netid')
+    name = data.get('name')
+
+    if not all([netid, name]):
+        return jsonify({"error": "NetID and Name are required"}), 400
+
+    user = execute_query(
+        "SELECT * FROM Student WHERE NetID = ? AND Name = ?",
+        (netid, name),
+        one=True
+    )
+
+    if user:
+        return jsonify({"message": "Login successful!", "user": user}), 200
+    else:
+        return jsonify({"error": "Invalid credentials"}), 401
+
 @app.route('/api/courses/search', methods=['GET'])
 def search_courses():
-    query = request.args.get('q', '').lower()
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT CourseID FROM Course_Catalog WHERE LOWER(CourseID) LIKE ?", (f"%{query}%",))
-    courses = cursor.fetchall()
-    conn.close()
-    return jsonify([dict(course) for course in courses])
+    search_term = request.args.get('q', '').lower()
+    query = """
+        SELECT CourseID 
+        FROM Course_Catalog 
+        WHERE LOWER(CourseID) LIKE ?
+        LIMIT 50
+    """
+    courses = execute_query(query, (f"%{search_term}%",))
+    return jsonify(courses)
+
+@app.route('/api/course/<courseid>/prerequisite-graph', methods=['GET'])
+def get_prerequisite_graph(courseid):
+    """
+    Recursively fetch all prerequisites and construct graph data.
+    """
+    def fetch_prerequisites(courseid, visited):
+        if courseid in visited:
+            return []
+        visited.add(courseid)
+        query = """
+            SELECT p.CourseID, p.PrerequisiteID
+            FROM Prerequisite p
+            WHERE p.CourseID = ?
+        """
+        prerequisites = execute_query(query, (courseid,))
+        edges = [{"from": prereq["PrerequisiteID"], "to": prereq["CourseID"]} for prereq in prerequisites]
+        for prereq in prerequisites:
+            edges.extend(fetch_prerequisites(prereq["PrerequisiteID"], visited))
+        return edges
+
+    visited = set()
+    graph_edges = fetch_prerequisites(courseid, visited)
+    nodes = [{"id": course, "label": course} for course in visited]
+    return jsonify({"nodes": nodes, "edges": graph_edges})
+
+@app.route('/api/update-account', methods=['PUT'])
+def update_account():
+    data = request.get_json()
+    netid = data.get('netid')
+    name = data.get('name')
+    major = data.get('majorid')
+    graduation = data.get('egrad')
+
+    if not netid:
+        return jsonify({"error": "NetID is required for updating information"}), 400
+
+    try:
+        existing_student = execute_query(
+            "SELECT * FROM Student WHERE NetID = ?",
+            (netid,),
+            one=True
+        )
+
+        if not existing_student:
+            return jsonify({"error": "Account with this NetID does not exist"}), 404
+
+        execute_query(
+            """
+            UPDATE Student
+            SET Name = ?, MajorID = ?, Expected_Graduation = ?
+            WHERE NetID = ?
+            """,
+            (name or existing_student["Name"], major or existing_student["MajorID"],
+             graduation or existing_student["Expected_Graduation"], netid),
+            commit=True
+        )
+        return jsonify({"message": "Information updated successfully"}), 200
+    except sqlite3.IntegrityError as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
