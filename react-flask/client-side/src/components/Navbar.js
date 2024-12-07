@@ -4,7 +4,7 @@ import './Navbar.css';
 
 function Navbar() {
   return (
-    <nav id="navbar">
+    <nav className="navbar">
       <div className="brand">Curriculum Crafter</div>
       <ul className="nav-links">
         <li>
@@ -18,6 +18,9 @@ function Navbar() {
         </li>
         <li>
           <Link to="/login" className="link">Login</Link>
+        </li>
+        <li>
+          <Link to="/course-graph" className="link">Course Graph</Link>
         </li>
         <li>
           <Link to="/students" className="link">Students</Link>
