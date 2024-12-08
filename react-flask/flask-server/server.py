@@ -234,18 +234,24 @@ def update_account():
 def add_plan():
     data = request.get_json()
     netid = data.get('netid')
-    planid = data.get('planid')
 
-    if not netid or planid is None:
-        return jsonify({"error": "NetID and PlanID are required"}), 400
+    if not netid:
+        return jsonify({"error": "NetID is required"}), 400
 
     try:
+        # Find the lowest available PlanID
+        query = "SELECT MAX(PlanID) AS max_planid FROM Academic_Plan"
+        result = execute_query(query, one=True)
+        max_planid = result["max_planid"] if result["max_planid"] is not None else 0
+        new_planid = max_planid + 1
+
+        # Add the new plan with only the date
         execute_query(
-            "INSERT INTO Academic_Plan (PlanID, CreationDate, NetID) VALUES (?, datetime('now'), ?)",
-            (planid, netid),
+            "INSERT INTO Academic_Plan (PlanID, CreationDate, NetID) VALUES (?, date('now'), ?)",
+            (new_planid, netid),
             commit=True
         )
-        return jsonify({"message": "Plan added successfully"}), 201
+        return jsonify({"message": f"Plan added successfully with PlanID {new_planid}.", "planid": new_planid}), 201
     except sqlite3.Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
@@ -254,21 +260,47 @@ def add_plan():
 def add_course():
     data = request.get_json()
     planid = data.get('planid')
-    courseid = data.get('courseid')
-    credits = data.get('credits')
-    semester = data.get('semester')
+    courseid = data.get('courseid').strip().upper()  # Ensure uppercase
+    semester = data.get('semester').strip().upper()  # Ensure uppercase
 
-    if not all([planid, courseid, credits, semester]):
-        return jsonify({"error": "All fields are required"}), 400
+    print(f"Received payload: PlanID={planid}, CourseID={courseid}, Semester={semester}")
+
+    if not all([planid, courseid, semester]):
+        return jsonify({"error": "All fields (planid, courseid, semester) are required"}), 400
 
     try:
+        # Check if the PlanID exists
+        plan_exists = execute_query("SELECT 1 FROM Academic_Plan WHERE PlanID = ?", (planid,), one=True)
+        print(f"Plan exists check: {plan_exists}")
+        if not plan_exists:
+            return jsonify({"error": f"PlanID {planid} does not exist"}), 404
+
+        # Check if CourseID exists
+        course_exists = execute_query("SELECT 1 FROM Course_Catalog WHERE LOWER(CourseID) = LOWER(?)", (courseid,), one=True)
+        print(f"Course exists check: {course_exists}")
+        if not course_exists:
+            return jsonify({"error": f"CourseID {courseid} does not exist in Course_Catalog"}), 404
+
+        # Check for duplicate entries
+        duplicate_check = execute_query(
+            "SELECT 1 FROM Planned_Course WHERE PlanID = ? AND CourseID = ?",
+            (planid, courseid),
+            one=True
+        )
+        print(f"Duplicate entry check: {duplicate_check}")
+        if duplicate_check:
+            return jsonify({"error": f"Course {courseid} is already added to PlanID {planid}"}), 409
+
+        # Add the course
         execute_query(
-            "INSERT INTO Planned_Course (PlanID, CourseID, Credits, Semester) VALUES (?, ?, ?, ?)",
-            (planid, courseid, credits, semester),
+            "INSERT INTO Planned_Course (PlanID, CourseID, Semester) VALUES (?, ?, ?)",
+            (planid, courseid, semester),
             commit=True
         )
-        return jsonify({"message": "Course added successfully"}), 201
-    except sqlite3.Error as e:
+        print("Course added successfully")
+        return jsonify({"message": f"Course {courseid} added to PlanID {planid} successfully"}), 201
+    except sqlite3.IntegrityError as e:
+        print(f"Database error: {str(e)}")
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
@@ -278,6 +310,23 @@ def delete_plan(planid):
         execute_query("DELETE FROM Academic_Plan WHERE PlanID = ?", (planid,), commit=True)
         return jsonify({"message": "Plan deleted successfully"}), 200
     except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    
+@app.route('/api/plan/<int:planid>/course/<courseid>', methods=['DELETE'])
+def delete_course(planid, courseid):
+    try:
+        print(f"Attempting to delete CourseID={courseid.upper()} from PlanID={planid}")
+        
+        execute_query(
+            "DELETE FROM Planned_Course WHERE PlanID = ? AND LOWER(CourseID) = LOWER(?)",
+            (planid, courseid),
+            commit=True
+        )
+        
+        print("Delete operation executed successfully.")
+        return jsonify({"message": f"Course {courseid} removed from PlanID {planid} successfully"}), 200
+    except sqlite3.Error as e:
+        print(f"Database error: {str(e)}")
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 

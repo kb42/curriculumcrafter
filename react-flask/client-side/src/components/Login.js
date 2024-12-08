@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 import './Login.css';
 
 function Login() {
@@ -13,6 +14,7 @@ function Login() {
   const [messageType, setMessageType] = useState(''); // 'success' or 'error'
 
   const numbers = Array.from({ length: 11 }, (_, i) => 1 + i * 0.5);
+  const navigate = useNavigate(); // Initialize navigate hook
 
   const toggleForm = (mode) => {
     setFormMode(mode);
@@ -65,6 +67,12 @@ function Login() {
             : 'Information updated successfully!';
         setMessage(successMessage);
         setMessageType('success');
+
+        // Redirect to CombinedPage after successful login
+        if (formMode === 'login') {
+          localStorage.setItem('netid', formData.netid); // Store the netid
+          setTimeout(() => navigate('/combinedpage'), 2000); // Redirect after 2 seconds
+        }
       } else {
         setMessage(result.error || 'Something went wrong.');
         setMessageType('error');
@@ -111,38 +119,36 @@ function Login() {
           </>
         )}
 
-        {(formMode === 'update') && (
+        {formMode === 'update' && (
           <>
+            <label htmlFor="update-majorid">Major Name</label>
+            <input
+              type="text"
+              id="update-majorid"
+              name="majorid"
+              value={formData.majorid}
+              onChange={handleInputChange}
+              placeholder="Enter your major"
+            />
 
-          <label htmlFor="update-majorid">Major Name</label>
-          <input
-            type="text"
-            id="update-majorid"
-            name="majorid"
-            value={formData.majorid}
-            onChange={handleInputChange}
-            placeholder="Enter your major"
-          />
-
-          <label htmlFor="update-egrad">Expected Graduation</label>
-          <select
-            id="update-egrad"
-            name="egrad"
-            value={formData.egrad}
-            onChange={handleInputChange}
-          >
-            {numbers.map((num) => (
-              <option key={num} value={num}>
-                {num}
-              </option>
-            ))}
-          </select>
-        </>
+            <label htmlFor="update-egrad">Expected Graduation</label>
+            <select
+              id="update-egrad"
+              name="egrad"
+              value={formData.egrad}
+              onChange={handleInputChange}
+            >
+              {numbers.map((num) => (
+                <option key={num} value={num}>
+                  {num}
+                </option>
+              ))}
+            </select>
+          </>
         )}
 
-        {(formMode === 'create') && (
+        {formMode === 'create' && (
           <>
-
             <label htmlFor="login-netid">NetID</label>
             <input
               type="text"
@@ -153,7 +159,7 @@ function Login() {
               placeholder="Enter your NetID"
               required
             />
-            
+
             <label htmlFor="update-name">Name</label>
             <input
               type="text"
@@ -202,9 +208,7 @@ function Login() {
         />
       </form>
 
-      {message && (
-        <p className={`message ${messageType}`}>{message}</p>
-      )}
+      {message && <p className={`message ${messageType}`}>{message}</p>}
 
       <div style={{ textAlign: 'center', marginTop: '10px' }}>
         <button onClick={() => toggleForm('login')} id="toggle-button">
@@ -222,3 +226,5 @@ function Login() {
 }
 
 export default Login;
+
+

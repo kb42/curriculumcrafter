@@ -6,7 +6,7 @@ import About from './components/About';
 import AddCourse from './components/AddCourse';
 import Login from './components/Login';
 import StudentsTable from './components/StudentsTable';
-// import StudentPlansTable from './components/StudentPlansTable';
+//import StudentPlansTable from './components/StudentPlansTable';
 // import PlanDetailsTable from './components/PlanDetailsTable';
 import CombinedPage from './components/CombinedPage';
 import CoursesTable from './components/CoursesTable';
@@ -38,6 +38,8 @@ function App() {
 
           {/* Data-related pages */}
           <Route path="/students" element={<StudentsTable />} />
+          {/* <Route path="/" element={<Login />} />
+          <Route path="/student-plan" element={<StudentPlansTable />} /> */}
           {/* <Route path="/student-plans" element={<StudentPlansTable />} />
           <Route path="/plan-details" element={<PlanDetailsTable />} /> */}
           <Route path="/combinedpage" element={<CombinedPage />} />
