@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import CourseGraph from './CourseGraph'; // Import the CourseGraph component
 
 function PrerequisitesTable() {
   const [search, setSearch] = useState(''); // Search input value
@@ -16,6 +17,9 @@ function PrerequisitesTable() {
           setFilteredCourses(response.data);
           if (response.data.length > 0) {
             setSelectedCourse(response.data[0].CourseID); // Set default selected course
+          } else {
+            setSelectedCourse('');
+            setPrerequisites([]);
           }
         })
         .catch((error) => {
@@ -23,6 +27,8 @@ function PrerequisitesTable() {
         });
     } else {
       setFilteredCourses([]); // Clear dropdown when search is too short
+      setSelectedCourse('');
+      setPrerequisites([]);
     }
   }, [search]);
 
@@ -36,7 +42,10 @@ function PrerequisitesTable() {
         })
         .catch((error) => {
           console.error('Error fetching prerequisites:', error);
+          setPrerequisites([]);
         });
+    } else {
+      setPrerequisites([]);
     }
   }, [selectedCourse]);
 
@@ -56,22 +65,26 @@ function PrerequisitesTable() {
       />
 
       {/* Dropdown for filtered courses */}
-      <label htmlFor="course-select">Select a Course:</label>
-      <select
-        id="course-select"
-        value={selectedCourse}
-        onChange={(e) => setSelectedCourse(e.target.value)}
-        style={{ margin: '10px', padding: '5px', width: '100%' }}
-      >
-        {filteredCourses.map((course) => (
-          <option key={course.CourseID} value={course.CourseID}>
-            {course.CourseID}
-          </option>
-        ))}
-      </select>
+      {filteredCourses.length > 0 && (
+        <>
+          <label htmlFor="course-select">Select a Course:</label>
+          <select
+            id="course-select"
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
+            style={{ margin: '10px', padding: '5px', width: '100%' }}
+          >
+            {filteredCourses.map((course) => (
+              <option key={course.CourseID} value={course.CourseID}>
+                {course.CourseID}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       {/* Display prerequisites */}
-      {prerequisites.length > 0 ? (
+      {selectedCourse && prerequisites.length > 0 ? (
         <>
           <h3>Prerequisites for {selectedCourse}</h3>
           <table border="1" style={{ borderCollapse: 'collapse', width: '100%' }}>
@@ -94,8 +107,12 @@ function PrerequisitesTable() {
           </table>
         </>
       ) : (
-        <p>No prerequisites available for {selectedCourse}.</p>
+        selectedCourse && <p>No prerequisites available for {selectedCourse}.</p>
       )}
+
+      {/* Integrate the CourseGraph here */}
+      {/* The CourseGraph will update whenever `selectedCourse` changes. */}
+      {selectedCourse && <CourseGraph selectedCourse={selectedCourse} />}
     </div>
   );
 }

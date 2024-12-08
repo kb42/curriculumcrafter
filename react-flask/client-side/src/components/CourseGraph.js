@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Network } from 'vis-network/standalone';
 import './CourseGraph.css';
 
-function CourseGraph() {
-  const [searchTerm, setSearchTerm] = useState('');
+function CourseGraph({ selectedCourse }) {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
   const [message, setMessage] = useState('');
 
   const fetchPrerequisiteGraph = async (courseID) => {
+    if (!courseID) return;
     try {
       const response = await fetch(`http://127.0.0.1:5000/api/course/${courseID}/prerequisite-graph`);
       if (response.ok) {
@@ -50,16 +50,9 @@ function CourseGraph() {
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchTerm) {
-      fetchPrerequisiteGraph(searchTerm);
-    }
-  };
-
   const renderGraph = () => {
     const container = document.getElementById('course-graph');
-    if (graphData.nodes.length && graphData.edges.length) {
+    if (container && graphData.nodes.length && graphData.edges.length) {
       const network = new Network(container, graphData, {
         layout: {
           hierarchical: {
@@ -91,7 +84,6 @@ function CourseGraph() {
       network.on('click', (params) => {
         if (params.nodes.length > 0) {
           const clickedNodeId = params.nodes[0];
-          setSearchTerm(clickedNodeId); // Update search term to match clicked course
           fetchPrerequisiteGraph(clickedNodeId); // Fetch the graph for the clicked course
         }
       });
@@ -99,40 +91,22 @@ function CourseGraph() {
   };
 
   useEffect(() => {
+    if (selectedCourse) {
+      fetchPrerequisiteGraph(selectedCourse);
+    } else {
+      // Clear graph if no course selected
+      setGraphData({ nodes: [], edges: [] });
+      setMessage('');
+    }
+  }, [selectedCourse]);
+
+  useEffect(() => {
     renderGraph();
   }, [graphData]);
 
   return (
-    <div>
+    <div style={{ marginTop: '20px' }}>
       <h2 style={{ textAlign: 'center' }}>Course Prerequisite Path</h2>
-      <form onSubmit={handleSearch} style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="Enter Course ID"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            padding: '10px',
-            width: '300px',
-            borderRadius: '5px',
-            border: '1px solid #ccc',
-            marginRight: '10px',
-          }}
-        />
-        <button
-          type="submit"
-          style={{
-            padding: '10px 20px',
-            borderRadius: '5px',
-            backgroundColor: '#007BFF',
-            color: '#fff',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          Search
-        </button>
-      </form>
 
       {message && (
         <div

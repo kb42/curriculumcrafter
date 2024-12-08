@@ -230,6 +230,56 @@ def update_account():
     except sqlite3.IntegrityError as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
+@app.route('/api/plan', methods=['POST'])
+def add_plan():
+    data = request.get_json()
+    netid = data.get('netid')
+    planid = data.get('planid')
+
+    if not netid or planid is None:
+        return jsonify({"error": "NetID and PlanID are required"}), 400
+
+    try:
+        execute_query(
+            "INSERT INTO Academic_Plan (PlanID, CreationDate, NetID) VALUES (?, datetime('now'), ?)",
+            (planid, netid),
+            commit=True
+        )
+        return jsonify({"message": "Plan added successfully"}), 201
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+
+@app.route('/api/course', methods=['POST'])
+def add_course():
+    data = request.get_json()
+    planid = data.get('planid')
+    courseid = data.get('courseid')
+    credits = data.get('credits')
+    semester = data.get('semester')
+
+    if not all([planid, courseid, credits, semester]):
+        return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        execute_query(
+            "INSERT INTO Planned_Course (PlanID, CourseID, Credits, Semester) VALUES (?, ?, ?, ?)",
+            (planid, courseid, credits, semester),
+            commit=True
+        )
+        return jsonify({"message": "Course added successfully"}), 201
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+
+@app.route('/api/plan/<int:planid>', methods=['DELETE'])
+def delete_plan(planid):
+    try:
+        execute_query("DELETE FROM Academic_Plan WHERE PlanID = ?", (planid,), commit=True)
+        return jsonify({"message": "Plan deleted successfully"}), 200
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
