@@ -3,7 +3,7 @@ import axios from 'axios';
 
 function StudentPlansTable() {
   const [plans, setPlans] = useState([]);
-  const netid = "johndoe"; // Replace with dynamic value if needed
+  const netid = "awa2"; // Replace with dynamic value if needed
 
   useEffect(() => {
     axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`)
