@@ -1,328 +1,268 @@
-// import React, { useEffect, useState } from 'react';
-// import axios from 'axios';
-
-// function CombinedPage() {
-//   const [netid, setNetID] = useState(localStorage.getItem('netid') || '')
-//   const [plans, setPlans] = useState([]);
-//   const [selectedPlanID, setSelectedPlanID] = useState(null);
-//   const [planDetails, setPlanDetails] = useState([]);
-//   const [message, setMessage] = useState('');
-//   const [newPlanID, setNewPlanID] = useState(null);
-//   const [newCourseData, setNewCourseData] = useState({
-//     planid: '',
-//     courseid: '',
-//     credits: '',
-//     semester: '',
-//   });
-
-//   // Fetch plans when the component mounts or when netid changes
-//   useEffect(() => {
-//     fetchPlans();
-//   }, [netid]);
-
-//   const fetchPlans = async () => {
-//     try {
-//       const response = await axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`);
-//       setPlans(response.data);
-//       setMessage('');
-//     } catch (error) {
-//       setMessage('Error fetching plans or no plans found.');
-//       console.error(error);
-//     }
-//   };
-
-//   const fetchPlanDetails = async (planID) => {
-//     try {
-//       const response = await axios.get(`http://127.0.0.1:5000/api/plan/${planID}`);
-//       setPlanDetails(response.data);
-//       setSelectedPlanID(planID);
-//       setMessage('');
-//     } catch (error) {
-//       setMessage('Error fetching plan details.');
-//       console.error(error);
-//     }
-//   };
-
-//   const deletePlan = async (planID) => {
-//     try {
-//       await axios.delete(`http://127.0.0.1:5000/api/plan/${planID}`);
-//       setPlans(plans.filter(plan => plan.PlanID !== planID));
-//       if (planID === selectedPlanID) setPlanDetails([]);
-//       setMessage('Plan deleted successfully.');
-//     } catch (error) {
-//       setMessage('Error deleting plan.');
-//       console.error(error);
-//     }
-//   };
-
-//   const addPlan = async () => {
-//     try {
-//       // Dynamically calculate the lowest available PlanID
-//       const usedIDs = plans.map(plan => plan.PlanID);
-//       const newPlanID = Math.max(0, ...usedIDs) + 1; // Find the next available ID
-  
-//       const response = await axios.post('http://127.0.0.1:5000/api/plan', { netid, planid: newPlanID });
-  
-//       if (response.status === 201) {
-//         setMessage(`Plan with ID ${newPlanID} added successfully.`);
-//         fetchPlans(); // Refresh the plans list
-//       } else {
-//         setMessage(response.data.error || 'Error adding new plan.');
-//       }
-//     } catch (error) {
-//       setMessage('Error adding new plan.');
-//       console.error(error);
-//     }
-//   };
-
-//   const addCourse = async (e) => {
-//     e.preventDefault();
-  
-//     if (!newCourseData.planid || !newCourseData.courseid || !newCourseData.credits || !newCourseData.semester) {
-//       setMessage('All fields are required for adding a course.');
-//       return;
-//     }
-  
-//     try {
-//       const response = await axios.post('http://127.0.0.1:5000/api/course', newCourseData);
-  
-//       if (response.status === 201) {
-//         setMessage('Course added successfully.');
-//         fetchPlanDetails(newCourseData.planid); // Refresh the plan details
-//         setNewCourseData({ planid: '', courseid: '', credits: '', semester: '' });
-//       } else {
-//         setMessage(response.data.error || 'Error adding course.');
-//       }
-//     } catch (error) {
-//       setMessage('Error adding course.');
-//       console.error(error);
-//     }
-//   };
-
-//   return (
-//     <div style={{ padding: '20px' }}>
-//       <h2>Academic Plans for {netid}</h2>
-
-//       {message && <p style={{ color: 'red' }}>{message}</p>}
-
-//       <button onClick={addPlan} style={{ marginBottom: '10px' }}>
-//         Add New Plan
-//       </button>
-
-//       {plans.length > 0 ? (
-//         <table border="1" style={{ borderCollapse: 'collapse', width: '100%' }}>
-//           <thead>
-//             <tr>
-//               <th>PlanID</th>
-//               <th>CreationDate</th>
-//               <th>NetID</th>
-//               <th>Actions</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//             {plans.map(plan => (
-//               <tr key={plan.PlanID}>
-//                 <td>{plan.PlanID}</td>
-//                 <td>{plan.CreationDate}</td>
-//                 <td>{plan.NetID}</td>
-//                 <td>
-//                   <button onClick={() => fetchPlanDetails(plan.PlanID)}>View Details</button>
-//                   <button onClick={() => deletePlan(plan.PlanID)} style={{ marginLeft: '10px' }}>
-//                     Delete
-//                   </button>
-//                 </td>
-//               </tr>
-//             ))}
-//           </tbody>
-//         </table>
-//       ) : (
-//         <p>No plans available.</p>
-//       )}
-
-//       {selectedPlanID && (
-//         <>
-//           <h3>Plan Details for PlanID {selectedPlanID}</h3>
-//           {planDetails.length > 0 ? (
-//             <table border="1" style={{ borderCollapse: 'collapse', width: '100%' }}>
-//               <thead>
-//                 <tr>
-//                   <th>CourseID</th>
-//                   <th>Credits</th>
-//                   <th>Semester</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {planDetails.map((course, index) => (
-//                   <tr key={index}>
-//                     <td>{course.CourseID}</td>
-//                     <td>{course.Credits}</td>
-//                     <td>{course.Semester}</td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           ) : (
-//             <p>No courses in this plan.</p>
-//           )}
-
-//           <h4>Add Course to Plan</h4>
-//           <form onSubmit={addCourse}>
-//             <label>
-//               PlanID:
-//               <input
-//                 type="text"
-//                 name="planid"
-//                 value={newCourseData.planid}
-//                 onChange={(e) => setNewCourseData({ ...newCourseData, planid: e.target.value })}
-//               />
-//             </label>
-//             <label>
-//               CourseID:
-//               <input
-//                 type="text"
-//                 name="courseid"
-//                 value={newCourseData.courseid}
-//                 onChange={(e) => setNewCourseData({ ...newCourseData, courseid: e.target.value })}
-//               />
-//             </label>
-//             <label>
-//               Credits:
-//               <input
-//                 type="text"
-//                 name="credits"
-//                 value={newCourseData.credits}
-//                 onChange={(e) => setNewCourseData({ ...newCourseData, credits: e.target.value })}
-//               />
-//             </label>
-//             <label>
-//               Semester:
-//               <input
-//                 type="text"
-//                 name="semester"
-//                 value={newCourseData.semester}
-//                 onChange={(e) => setNewCourseData({ ...newCourseData, semester: e.target.value })}
-//               />
-//             </label>
-//             <button type="submit">Add Course</button>
-//           </form>
-//         </>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default CombinedPage;
-
-
-
-
-
-
-
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './CombinedPage.css';
+import APCreditPopup from './popup';
 
 function CombinedPage() {
-  const [netid, setNetID] = useState(localStorage.getItem('netid') || '') 
+  // State definitions
+  const [netid, setNetID] = useState(localStorage.getItem('netid') || '');
   const [plans, setPlans] = useState([]);
   const [selectedPlanID, setSelectedPlanID] = useState(null);
   const [planDetails, setPlanDetails] = useState([]);
   const [message, setMessage] = useState('');
+  const [showCourseForm, setShowCourseForm] = useState(false);
+  const [showAPForm, setShowAPForm] = useState(false);
+  const [apCourses, setAPCourses] = useState([]);
+  const [showAPPopup, setShowAPPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [newCourseData, setNewCourseData] = useState({
-    planid: '',
     courseid: '',
     semester: '',
   });
 
+  const [newAPData, setNewAPData] = useState({
+    apCredit: '',
+    apScore: '',
+  });
+
+  // Fetch initial data
   useEffect(() => {
-    fetchPlans();
+    if (netid) {
+      fetchPlans();
+    }
   }, [netid]);
 
+  // Fetch AP courses when form is shown
+  useEffect(() => {
+    if (showAPForm) {
+      console.log('AP form shown, fetching courses...');
+      fetchAPCourses();
+    }
+  }, [showAPForm]);
+
+  // API calls
   const fetchPlans = async () => {
     try {
+      setIsLoading(true);
       const response = await axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`);
       setPlans(response.data);
       setMessage('');
     } catch (error) {
+      console.error('Error fetching plans:', error);
       setMessage('Error fetching plans or no plans found.');
-      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTotalCredits = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`http://127.0.0.1:5000/api/students/total-credits/${netid}`);
+      if (response.data && response.data.length > 0) {
+        setMessage(`Total Planned Credits: ${response.data[0].Total_Planned_Credits}`);
+      } else {
+        setMessage('No credits information found');
+      }
+    } catch (error) {
+      console.error('Error fetching total credits:', error);
+      setMessage('Error fetching total credits');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const getRequirementsFulfilled = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`http://127.0.0.1:5000//api/students/requirements/${netid}`);
+      if (response.data && response.data.length > 0) {
+        const courses = response.data.map(r => r.CourseID).join(', ');
+        setMessage(`Requirements Fulfilled: ${courses}`);
+      } else {
+        setMessage('No requirements fulfilled yet');
+      }
+    } catch (error) {
+      console.error('Error fetching requirements:', error);
+      setMessage('Error fetching requirements fulfilled');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchAPCourses = async () => {
+    try {
+      console.log('Fetching AP courses...');
+      setIsLoading(true);
+      const response = await axios.get('http://127.0.0.1:5000/api/ap-courses');
+      console.log('AP courses response:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        setAPCourses(response.data);
+      } else {
+        console.error('Unexpected AP courses response format:', response.data);
+        setAPCourses([]);
+        setMessage('Error loading AP courses.');
+      }
+    } catch (error) {
+      console.error('Error fetching AP courses:', error);
+      setAPCourses([]);
+      setMessage('Error loading AP courses.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const fetchPlanDetails = async (planID) => {
     try {
+      setIsLoading(true);
       const response = await axios.get(`http://127.0.0.1:5000/api/plan/${planID}`);
       setPlanDetails(response.data);
       setSelectedPlanID(planID);
+      setShowCourseForm(false);
+      setShowAPForm(false);
       setMessage('');
     } catch (error) {
+      console.error('Error fetching plan details:', error);
       setMessage('Error fetching plan details.');
-      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Validation functions
+  const validateAPScore = (score) => {
+    const numScore = Number(score);
+    if (!Number.isInteger(numScore) || numScore < 1 || numScore > 5) {
+      setMessage('AP Score must be an integer between 1 and 5');
+      return false;
+    }
+    return true;
+  };
+
+  // Form handling
+  const handleAPSubmit = async ({ semester }) => {
+    try {
+      setIsLoading(true);
+      // First get the CourseID based on AP Course and Score
+      const apResponse = await axios.get('http://127.0.0.1:5000/api/ap-course-mapping', {
+        params: {
+          courseName: newAPData.apCredit,
+          score: newAPData.apScore
+        }
+      });
+      
+      // If we got a valid CourseID, add it as a regular course
+      if (apResponse.data.CourseID) {
+        const payload = {
+          planid: selectedPlanID,
+          courseid: apResponse.data.CourseID, // Use the mapped CourseID
+          semester: semester.toUpperCase()
+        };
+  
+        // Use the existing course addition endpoint
+        const response = await axios.post('http://127.0.0.1:5000/api/course', payload);
+        
+        if (response.status === 201) {
+          setMessage('AP credit course added successfully');
+          fetchPlanDetails(selectedPlanID);
+          setShowAPForm(false);
+          setNewAPData({ apCredit: '', apScore: '' });
+        }
+      }
+    } catch (error) {
+      console.error('Error adding AP credit course:', error);
+      setMessage(error.response?.data?.error || 'Error adding AP credit course');
+    } finally {
+      setIsLoading(false);
+      setShowAPPopup(false);
+    }
+  };
+
+  const addAPCredit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateAPScore(newAPData.apScore)) {
+      return;
+    }
+    
+    setShowAPPopup(true);
+  };
+
+  const addCourse = async (e) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      const payload = {
+        planid: selectedPlanID,
+        courseid: newCourseData.courseid.toUpperCase(),
+        semester: newCourseData.semester.toUpperCase(),
+      };
+
+      const response = await axios.post('http://127.0.0.1:5000/api/course', payload);
+      if (response.status === 201) {
+        setMessage('Course added successfully');
+        fetchPlanDetails(selectedPlanID);
+        setShowCourseForm(false);
+        setNewCourseData({ courseid: '', semester: '' });
+      }
+    } catch (error) {
+      console.error('Error adding course:', error);
+      setMessage(error.response?.data?.error || 'Error adding course');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete operations
   const deletePlan = async (planID) => {
     try {
+      setIsLoading(true);
       await axios.delete(`http://127.0.0.1:5000/api/plan/${planID}`);
       setPlans(plans.filter(plan => plan.PlanID !== planID));
-      if (planID === selectedPlanID) setPlanDetails([]);
-      setMessage('Plan deleted successfully.');
+      if (planID === selectedPlanID) {
+        setPlanDetails([]);
+        setShowCourseForm(false);
+        setShowAPForm(false);
+      }
+      setMessage('Plan deleted successfully');
     } catch (error) {
-      setMessage('Error deleting plan.');
-      console.error(error);
+      console.error('Error deleting plan:', error);
+      setMessage('Error deleting plan');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const deleteCourse = async (courseID) => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:5000/api/plan/${selectedPlanID}/course/${courseID}`);
-      setMessage(response.data.message);
-      fetchPlanDetails(selectedPlanID); // Refresh the plan details
+      setIsLoading(true);
+      await axios.delete(`http://127.0.0.1:5000/api/plan/${selectedPlanID}/course/${courseID}`);
+      setMessage('Course deleted successfully');
+      fetchPlanDetails(selectedPlanID);
     } catch (error) {
-      setMessage('Error deleting course.');
       console.error('Error deleting course:', error);
+      setMessage('Error deleting course');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Add new plan
   const addPlan = async () => {
     try {
-      const payload = { netid }; // Only pass the netid, backend handles planid
-      const response = await axios.post('http://127.0.0.1:5000/api/plan', payload);
-
+      setIsLoading(true);
+      const response = await axios.post('http://127.0.0.1:5000/api/plan', { netid });
       if (response.status === 201) {
-        setMessage(response.data.message);
-        fetchPlans(); // Refresh the plans list
-      } else {
-        setMessage(response.data.error || 'Error adding new plan.');
+        setMessage('Plan added successfully');
+        fetchPlans();
       }
     } catch (error) {
-      console.error('Error adding new plan:', error);
-      setMessage('Error adding new plan.');
-    }
-  };
-
-  const addCourse = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
-
-    const payload = {
-      planid: newCourseData.planid,
-      courseid: newCourseData.courseid.toUpperCase(),
-      semester: newCourseData.semester.toUpperCase(),
-    };
-
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/api/course', payload);
-
-      if (response.status === 201) {
-        setMessage(response.data.message);
-        fetchPlanDetails(newCourseData.planid); // Refresh the plan details
-      } else {
-        setMessage(response.data.error || 'Error adding new course.');
-      }
-    } catch (error) {
-      console.error('Error adding new course:', error);
-      setMessage('Error adding new course.');
+      console.error('Error adding plan:', error);
+      setMessage(error.response?.data?.error || 'Error adding plan');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -336,8 +276,12 @@ function CombinedPage() {
         </p>
       )}
 
-      <button className="combined-page-button" onClick={addPlan}>
-        Add New Plan
+      <button 
+        className="combined-page-button" 
+        onClick={addPlan}
+        disabled={isLoading}
+      >
+        {isLoading ? 'Adding...' : 'Add New Plan'}
       </button>
 
       {plans.length > 0 ? (
@@ -357,10 +301,18 @@ function CombinedPage() {
                 <td>{plan.CreationDate}</td>
                 <td>{plan.NetID}</td>
                 <td>
-                  <button className="combined-page-button" onClick={() => fetchPlanDetails(plan.PlanID)}>
+                  <button 
+                    className="combined-page-button" 
+                    onClick={() => fetchPlanDetails(plan.PlanID)}
+                    disabled={isLoading}
+                  >
                     View Details
                   </button>
-                  <button className="combined-page-button" onClick={() => deletePlan(plan.PlanID)}>
+                  <button 
+                    className="combined-page-button" 
+                    onClick={() => deletePlan(plan.PlanID)}
+                    disabled={isLoading}
+                  >
                     Delete
                   </button>
                 </td>
@@ -375,6 +327,44 @@ function CombinedPage() {
       {selectedPlanID && (
         <>
           <h3>Plan Details for PlanID {selectedPlanID}</h3>
+
+          <div className="plan-actions">
+            <button 
+              className="combined-page-button"
+              onClick={getTotalCredits}
+              disabled={isLoading}
+            >
+              View Total Credits
+            </button>
+            <button 
+              className="combined-page-button"
+              onClick={getRequirementsFulfilled}
+              disabled={isLoading}
+            >
+              View Requirements Fulfilled
+            </button>
+            <button 
+              className="combined-page-button"
+              onClick={() => {
+                setShowCourseForm(true);
+                setShowAPForm(false);
+              }}
+              disabled={isLoading}
+            >
+              Add Course
+            </button>
+            <button 
+              className="combined-page-button"
+              onClick={() => {
+                setShowAPForm(true);
+                setShowCourseForm(false);
+              }}
+              disabled={isLoading}
+            >
+              Add AP Credit
+            </button>
+          </div>
+
           {planDetails.length > 0 ? (
             <table className="combined-page-table">
               <thead>
@@ -390,7 +380,11 @@ function CombinedPage() {
                     <td>{course.CourseID}</td>
                     <td>{course.Semester}</td>
                     <td>
-                      <button className="combined-page-button" onClick={() => deleteCourse(course.CourseID)}>
+                      <button 
+                        className="combined-page-button" 
+                        onClick={() => deleteCourse(course.CourseID)}
+                        disabled={isLoading}
+                      >
                         Delete
                       </button>
                     </td>
@@ -402,43 +396,104 @@ function CombinedPage() {
             <p>No courses in this plan.</p>
           )}
 
-        <h4>Add Course to Plan</h4>
-        <form className="combined-page-form" onSubmit={addCourse}>
-        <label>
-            PlanID:
-            <input
-            type="text"
-            name="planid"
-            value={newCourseData.planid}
-            onChange={(e) => setNewCourseData({ ...newCourseData, planid: e.target.value })}
-            required
-            />
-        </label>
-        <label>
-            CourseID:
-            <input
-            type="text"
-            name="courseid"
-            value={newCourseData.courseid}
-            onChange={(e) => setNewCourseData({ ...newCourseData, courseid: e.target.value })}
-            required
-            />
-        </label>
-        <label>
-            Semester:
-            <input
-            type="text"
-            name="semester"
-            value={newCourseData.semester}
-            onChange={(e) => setNewCourseData({ ...newCourseData, semester: e.target.value })}
-            required
-            />
-        </label>
-        <button className="combined-page-button" type="submit">
-            Add Course
-        </button>
-        </form>
+          {showCourseForm && (
+            <div className="form-container">
+              <h4>Add Course to Plan</h4>
+              <form className="combined-page-form" onSubmit={addCourse}>
+                <label>
+                  CourseID:
+                  <input
+                    type="text"
+                    value={newCourseData.courseid}
+                    onChange={(e) => setNewCourseData({ ...newCourseData, courseid: e.target.value })}
+                    required
+                    disabled={isLoading}
+                  />
+                </label>
+                <label>
+                  Semester:
+                  <input
+                    type="text"
+                    value={newCourseData.semester}
+                    onChange={(e) => setNewCourseData({ ...newCourseData, semester: e.target.value })}
+                    required
+                    disabled={isLoading}
+                  />
+                </label>
+                <button 
+                  className="combined-page-button" 
+                  type="submit"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Adding...' : 'Add Course'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {showAPForm && (
+            <div className="form-container">
+              <h4>Add AP Credit to Plan</h4>
+              <form className="combined-page-form" onSubmit={addAPCredit}>
+                <label>
+                  AP Credit:
+                  <select
+                    value={newAPData.apCredit}
+                    onChange={(e) => setNewAPData({ ...newAPData, apCredit: e.target.value })}
+                    required
+                    className="combined-page-select"
+                    disabled={isLoading || !apCourses.length}
+                  >
+                    <option value="">Select AP Course</option>
+                    {apCourses.map((course, index) => (
+                      <option key={index} value={course.CourseName}>
+                        {course.CourseName}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  AP Score:
+                  <select
+                    value={newAPData.apScore}
+                    onChange={(e) => setNewAPData({ ...newAPData, apScore: e.target.value })}
+                    required
+                    className="combined-page-select"
+                    disabled={isLoading}
+                  >
+                    <option value="">Select AP Score</option>
+                    {[1, 2, 3, 4, 5].map((score) => (
+                      <option key={score} value={score}>
+                        {score}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button 
+                  className="combined-page-button" 
+                  type="submit"
+                  disabled={isLoading || !apCourses.length}
+                >
+                  {isLoading ? 'Adding...' : 'Add AP Credit'}
+                </button>
+              </form>
+            </div>
+          )}
         </>
+      )}
+      
+      <APCreditPopup
+        show={showAPPopup}
+        apCredit={newAPData.apCredit}
+        apScore={newAPData.apScore}
+        onClose={() => setShowAPPopup(false)}
+        onSubmit={handleAPSubmit}
+      />
+
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+        </div>
       )}
     </div>
   );
