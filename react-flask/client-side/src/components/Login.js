@@ -1,20 +1,28 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
 function Login() {
-  const [formMode, setFormMode] = useState('login'); // 'login', 'create', 'update'
+  const [formMode, setFormMode] = useState('login');
   const [formData, setFormData] = useState({
     name: '',
     netid: '',
     majorid: '',
     egrad: 1,
   });
+  const [majors, setMajors] = useState([]);
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState(''); // 'success' or 'error'
+  const [messageType, setMessageType] = useState('');
 
   const numbers = Array.from({ length: 11 }, (_, i) => 1 + i * 0.5);
-  const navigate = useNavigate(); // Initialize navigate hook
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetch('http://127.0.0.1:5000/api/majors')
+      .then((response) => response.json())
+      .then((data) => setMajors(data))
+      .catch((error) => console.error('Error fetching majors:', error));
+  }, []);
 
   const toggleForm = (mode) => {
     setFormMode(mode);
@@ -68,10 +76,9 @@ function Login() {
         setMessage(successMessage);
         setMessageType('success');
 
-        // Redirect to CombinedPage after successful login
         if (formMode === 'login') {
-          localStorage.setItem('netid', formData.netid); // Store the netid
-          setTimeout(() => navigate('/combinedpage'), 2000); // Redirect after 2 seconds
+          localStorage.setItem('netid', formData.netid);
+          setTimeout(() => navigate('/combinedpage'), 2000);
         }
       } else {
         setMessage(result.error || 'Something went wrong.');
@@ -85,6 +92,26 @@ function Login() {
 
   return (
     <div id="form-container">
+      <div className="toggle-container">
+        <button
+          onClick={() => toggleForm('login')}
+          className={`toggle-button ${formMode === 'login' ? 'active' : ''}`}
+        >
+          Login
+        </button>
+        <button
+          onClick={() => toggleForm('create')}
+          className={`toggle-button ${formMode === 'create' ? 'active' : ''}`}
+        >
+          Create Account
+        </button>
+        <button
+          onClick={() => toggleForm('update')}
+          className={`toggle-button ${formMode === 'update' ? 'active' : ''}`}
+        >
+          Update Information
+        </button>
+      </div>
       <h1>
         {formMode === 'login'
           ? 'Login'
@@ -122,14 +149,19 @@ function Login() {
         {formMode === 'update' && (
           <>
             <label htmlFor="update-majorid">Major Name</label>
-            <input
-              type="text"
+            <select
               id="update-majorid"
               name="majorid"
               value={formData.majorid}
               onChange={handleInputChange}
-              placeholder="Enter your major"
-            />
+            >
+              <option value="">Select a major</option>
+              {majors.map((major) => (
+                <option key={major.MajorID} value={major.MajorID}>
+                  {major.MajorID}
+                </option>
+              ))}
+            </select>
 
             <label htmlFor="update-egrad">Expected Graduation</label>
             <select
@@ -171,14 +203,19 @@ function Login() {
             />
 
             <label htmlFor="update-majorid">Major Name</label>
-            <input
-              type="text"
+            <select
               id="update-majorid"
               name="majorid"
               value={formData.majorid}
               onChange={handleInputChange}
-              placeholder="Enter your major"
-            />
+            >
+              <option value="">Select a major</option>
+              {majors.map((major) => (
+                <option key={major.MajorID} value={major.MajorID}>
+                  {major.MajorID}
+                </option>
+              ))}
+            </select>
 
             <label htmlFor="update-egrad">Expected Graduation</label>
             <select
@@ -209,22 +246,8 @@ function Login() {
       </form>
 
       {message && <p className={`message ${messageType}`}>{message}</p>}
-
-      <div style={{ textAlign: 'center', marginTop: '10px' }}>
-        <button onClick={() => toggleForm('login')} id="toggle-button">
-          Login
-        </button>
-        <button onClick={() => toggleForm('create')} id="toggle-button">
-          Create Account
-        </button>
-        <button onClick={() => toggleForm('update')} id="toggle-button">
-          Update Information
-        </button>
-      </div>
     </div>
   );
 }
 
 export default Login;
-
-

@@ -94,6 +94,12 @@ def get_plan(planid):
     courses = execute_query(query, (planid,))
     return jsonify(courses)
 
+@app.route('/api/majors', methods=['GET'])
+def get_majors():
+    query = "SELECT DISTINCT MajorID FROM Requirement"
+    majors = execute_query(query)
+    return jsonify(majors)
+
 @app.route('/api/course/<courseid>/prerequisites', methods=['GET'])
 def get_prerequisites(courseid):
     query = """
