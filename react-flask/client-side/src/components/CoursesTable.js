@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './CoursesTable.css';
 
 function CoursesTable() {
   const [courses, setCourses] = useState([]);
@@ -15,10 +16,10 @@ function CoursesTable() {
   }, []);
 
   return (
-    <div>
+    <div className="courses-container">
       <h2>Courses</h2>
       {courses.length > 0 ? (
-        <table border="1" style={{ borderCollapse: 'collapse', width: '100%' }}>
+        <table>
           <thead>
             <tr>
               {Object.keys(courses[0]).map((key) => (

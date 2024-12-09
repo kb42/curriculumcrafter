@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import CourseGraph from './CourseGraph'; // Import the CourseGraph component
+import './PrerequisitesTable.css';
 
 function PrerequisitesTable() {
-  const [search, setSearch] = useState(''); // Search input value
-  const [filteredCourses, setFilteredCourses] = useState([]); // Filtered courses for display
-  const [selectedCourse, setSelectedCourse] = useState(''); // Selected course ID
-  const [prerequisites, setPrerequisites] = useState([]); // Prerequisites for the selected course
+  const [search, setSearch] = useState('');
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [prerequisites, setPrerequisites] = useState([]);
 
-  // Fetch filtered courses from the server based on search query
   useEffect(() => {
-    if (search.length >= 2) { // Trigger search after 2+ characters
+    if (search.length >= 2) {
       axios
         .get(`http://127.0.0.1:5000/api/courses/search?q=${search}`)
         .then((response) => {
           setFilteredCourses(response.data);
           if (response.data.length > 0) {
-            setSelectedCourse(response.data[0].CourseID); // Set default selected course
+            setSelectedCourse(response.data[0].CourseID);
           } else {
             setSelectedCourse('');
             setPrerequisites([]);
@@ -26,13 +26,12 @@ function PrerequisitesTable() {
           console.error('Error fetching filtered courses:', error);
         });
     } else {
-      setFilteredCourses([]); // Clear dropdown when search is too short
+      setFilteredCourses([]);
       setSelectedCourse('');
       setPrerequisites([]);
     }
   }, [search]);
 
-  // Fetch prerequisites when the selected course changes
   useEffect(() => {
     if (selectedCourse) {
       axios
@@ -50,10 +49,9 @@ function PrerequisitesTable() {
   }, [selectedCourse]);
 
   return (
-    <div>
+    <div className="prerequisites-container">
       <h2>Course Prerequisites</h2>
 
-      {/* Search input */}
       <label htmlFor="course-search">Search for a Course:</label>
       <input
         type="text"
@@ -61,10 +59,8 @@ function PrerequisitesTable() {
         placeholder="Enter course ID..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        style={{ margin: '10px', padding: '5px', width: '100%' }}
       />
 
-      {/* Dropdown for filtered courses */}
       {filteredCourses.length > 0 && (
         <>
           <label htmlFor="course-select">Select a Course:</label>
@@ -72,7 +68,6 @@ function PrerequisitesTable() {
             id="course-select"
             value={selectedCourse}
             onChange={(e) => setSelectedCourse(e.target.value)}
-            style={{ margin: '10px', padding: '5px', width: '100%' }}
           >
             {filteredCourses.map((course) => (
               <option key={course.CourseID} value={course.CourseID}>
@@ -83,11 +78,10 @@ function PrerequisitesTable() {
         </>
       )}
 
-      {/* Display prerequisites */}
       {selectedCourse && prerequisites.length > 0 ? (
         <>
           <h3>Prerequisites for {selectedCourse}</h3>
-          <table border="1" style={{ borderCollapse: 'collapse', width: '100%' }}>
+          <table>
             <thead>
               <tr>
                 {Object.keys(prerequisites[0]).map((key) => (
@@ -110,8 +104,6 @@ function PrerequisitesTable() {
         selectedCourse && <p>No prerequisites available for {selectedCourse}.</p>
       )}
 
-      {/* Integrate the CourseGraph here */}
-      {/* The CourseGraph will update whenever `selectedCourse` changes. */}
       {selectedCourse && <CourseGraph selectedCourse={selectedCourse} />}
     </div>
   );

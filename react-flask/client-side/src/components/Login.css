@@ -10,10 +10,42 @@
   font-family: Arial, sans-serif;
 }
 
+/* Styling for the tab buttons */
+.toggle-container {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+.toggle-button {
+  flex: 1;
+  padding: 10px;
+  background-color: #f1f1f1;
+  color: #555;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s, border-bottom-color 0.3s;
+}
+
+.toggle-button.active {
+  background-color: #007BFF;
+  color: white;
+  border-bottom-color: #0056b3;
+}
+
+.toggle-button:hover {
+  background-color: #e9ecef;
+}
+
 /* Styling for the heading */
 #form-container h1 {
   text-align: center;
   color: #333;
+  margin-bottom: 20px;
 }
 
 /* Styling for the labels */
@@ -42,7 +74,7 @@
 #form-container input[type="submit"] {
   width: 100%;
   padding: 10px;
-  background-color: #4CAF50;
+  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 4px;
@@ -52,25 +84,7 @@
 }
 
 #form-container input[type="submit"]:hover {
-  background-color: #45a049;
-}
-
-/* Styling for the toggle button */
-#toggle-button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-#toggle-button:hover {
-  background-color: #0056b3;
+  background-color: #218838;
 }
 
 /* Message styling */
