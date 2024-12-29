@@ -39,6 +39,19 @@ function CombinedPage() {
   });
   const [showRequirementsModal, setShowRequirementsModal] = useState(false);
 
+  //progress state variables
+  const [progressDetails, setProgressDetails] = useState({
+    courseProgress: [],
+    semesterProgress: [],
+    summary: {
+      totalCredits: 0,
+      requirementsCompleted: 0,
+      graduationStatus: '',
+      expectedGraduation: ''
+    }
+  });
+  const [showProgressModal, setShowProgressModal] = useState(false);
+
   const [newCourseData, setNewCourseData] = useState({
     courseid: '',
     semester: '',
@@ -222,17 +235,46 @@ function CombinedPage() {
     try {
       setIsLoading(true);
       const response = await axios.get(`http://127.0.0.1:5000/api/student/progress/${netid}`);
-      setProgressAnalysis(response.data);
-      const totalCredits = response.data.find(item => 
-        item.category === 'Total Credits'
-      )?.detail.split(' ')[0];
       
-      let message = `Progress Analysis:\n`;
+      // Process and categorize the analysis data
+      const processedData = {
+        courseProgress: [],
+        semesterProgress: [],
+        summary: {
+          totalCredits: 0,
+          requirementsCompleted: 0,
+          graduationStatus: '',
+          expectedGraduation: ''
+        }
+      };
+  
       response.data.forEach(item => {
-        message += `${item.category}: ${item.detail}\n`;
+        switch (item.category) {
+          case 'Course':
+            processedData.courseProgress.push(item);
+            break;
+          case 'Total Credits':
+            processedData.summary.totalCredits = parseInt(item.detail);
+            break;
+          case 'Status':
+            processedData.summary.graduationStatus = item.detail;
+            break;
+          case 'Requirements Progress':
+            processedData.summary.requirementsCompleted = item.detail;
+            break;
+          case 'Expected Graduation':
+            processedData.summary.expectedGraduation = item.detail;
+            break;
+          default:
+            if (item.category.startsWith('Semester')) {
+              processedData.semesterProgress.push(item);
+            }
+        }
       });
-      
-      setMessage(message);
+  
+      setProgressDetails(processedData);
+      setShowProgressModal(true);
+      setMessage('Progress analysis completed successfully');
     } catch (error) {
       console.error('Error analyzing progress:', error);
       setMessage('Error analyzing student progress');
@@ -891,6 +933,30 @@ function CombinedPage() {
                 onClick={() => setShowTotalCreditsPopup(false)}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        )}
+        {/* Progress Analysis Results */}
+        {progressAnalysis && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Academic Progress Analysis</h3>
+              
+              <div className="progress-details">
+                {progressAnalysis.map((item, index) => (
+                  <div key={index} className="progress-item">
+                    <div className="progress-category">{item.category}:</div>
+                    <div className="progress-detail">{item.detail}</div>
+                  </div>
+                ))}
+              </div>
+
+              <button 
+                className="combined-page-button"
+                onClick={() => setProgressAnalysis(null)}
+              >
+                Close Analysis
               </button>
             </div>
           </div>

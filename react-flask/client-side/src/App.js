@@ -31,8 +31,8 @@ function App() {
         <Navbar />
         <Routes>
           {/* Main pages */}
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
+          {/* <Route path="/" element={<Home />} /> */}
+          <Route path="/" element={<About />} />
           <Route path="/add-course" element={<AddCourse />} />
           <Route path="/login" element={<Login />} />
 

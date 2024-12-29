@@ -586,58 +586,31 @@ def check_prerequisites(courseid):
 @app.route('/api/course/add-with-validation', methods=['POST'])
 def add_course_with_validation():
     """
-    Add a course with credit limit validation
+    Add a course using stored procedure with validation
     """
     data = request.get_json()
     planid = data.get('planid')
     courseid = data.get('courseid')
     semester = data.get('semester')
+    netid = data.get('netid')
     
     try:
-        # First check semester credit total
-        credit_query = """
-        SELECT COALESCE(SUM(cc.Credits), 0) as current_credits,
-               (SELECT Credits FROM Course_Catalog WHERE CourseID = %s) as new_credits
-        FROM Planned_Course pc
-        JOIN Course_Catalog cc ON pc.CourseID = cc.CourseID
-        WHERE pc.PlanID = %s AND UPPER(pc.Semester) = UPPER(%s)
-        """
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
         
-        result = execute_query(credit_query, (courseid, planid, semester), one=True)
-        current_credits = result['current_credits']
-        new_credits = result['new_credits']
-        
-        # Check if adding this course would exceed 18 credits
-        if current_credits + new_credits > 18:
-            return jsonify({
-                'error': 'Adding this course would exceed the maximum credits (18) for the semester'
-            }), 400
-
-        # Check number of courses in semester
-        count_query = """
-        SELECT COUNT(*) as course_count
-        FROM Planned_Course
-        WHERE PlanID = %s AND UPPER(Semester) = UPPER(%s)
-        """
-        count_result = execute_query(count_query, (planid, semester), one=True)
-        
-        if count_result['course_count'] >= 6:
-            return jsonify({
-                'error': 'Cannot add more than 6 courses per semester'
-            }), 400
-
-        # If all validations pass, add the course
-        add_query = """
-        INSERT INTO Planned_Course (PlanID, CourseID, Semester)
-        VALUES (%s, %s, %s)
-        """
-        execute_query(add_query, (planid, courseid, semester), commit=True)
+        # Call the stored procedure
+        cursor.callproc('AddCourseWithValidation', [planid, courseid, semester, netid])
+        conn.commit()
         
         return jsonify({'message': 'Course added successfully'}), 201
         
-    except Exception as e:
-        print(f"Error adding course with validation: {str(e)}")
+    except mysql.connector.Error as e:
+        if e.errno == 1644:  # Custom error from stored procedure
+            return jsonify({'error': str(e)}), 400
+        print(f"Error adding course: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
 
 @app.route('/api/course/add-with-bypass', methods=['POST'])
 def add_course_with_bypass():
@@ -791,6 +764,82 @@ def find_students_fulfilling_requirements(netid):
         print(f"Error fetching requirements: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+#analyze a student's progress:
+# Add this to your server.py
+@app.route('/api/student/progress/<netid>', methods=['GET'])
+def analyze_student_progress(netid):
+    try:
+        # Call the stored procedure
+        cursor = get_db().cursor(dictionary=True)
+        cursor.callproc('AnalyzeStudentProgress', [netid])
+        
+        # Get basic progress data
+        basic_progress = cursor.fetchall()
+        cursor.nextset()  # Move to next result set if any
+        
+        # Get additional analysis data
+        additional_analysis = []
+        
+        # Get major requirements progress
+        req_query = """
+        SELECT r.CourseID, r.Credits,
+               CASE WHEN pc.CourseID IS NOT NULL THEN 'Completed' ELSE 'Pending' END as Status
+        FROM Requirement r
+        JOIN Student s ON r.MajorID = s.MajorID
+        LEFT JOIN Academic_Plan ap ON s.NetID = ap.NetID
+        LEFT JOIN Planned_Course pc ON ap.PlanID = pc.PlanID AND r.CourseID = pc.CourseID
+        WHERE s.NetID = %s
+        """
+        cursor.execute(req_query, (netid,))
+        requirements = cursor.fetchall()
+        
+        # Calculate requirements progress
+        total_req = len(requirements)
+        completed_req = len([r for r in requirements if r['Status'] == 'Completed'])
+        
+        additional_analysis.append({
+            'category': 'Requirements Progress',
+            'detail': f'Completed {completed_req} out of {total_req} required courses'
+        })
 
+        # Get semester-wise progress
+        sem_query = """
+        SELECT pc.Semester, COUNT(*) as CourseCount, SUM(cc.Credits) as Credits
+        FROM Academic_Plan ap
+        JOIN Planned_Course pc ON ap.PlanID = pc.PlanID
+        JOIN Course_Catalog cc ON pc.CourseID = cc.CourseID
+        WHERE ap.NetID = %s
+        GROUP BY pc.Semester
+        ORDER BY pc.Semester
+        """
+        cursor.execute(sem_query, (netid,))
+        semester_progress = cursor.fetchall()
+        
+        for sem in semester_progress:
+            additional_analysis.append({
+                'category': f'Semester {sem["Semester"]}',
+                'detail': f'{sem["CourseCount"]} courses, {sem["Credits"]} credits'
+            })
+
+        # Get expected graduation
+        grad_query = "SELECT Expected_Graduation FROM Student WHERE NetID = %s"
+        cursor.execute(grad_query, (netid,))
+        grad_info = cursor.fetchone()
+        
+        if grad_info:
+            additional_analysis.append({
+                'category': 'Expected Graduation',
+                'detail': f'After {grad_info["Expected_Graduation"]} semesters'
+            })
+
+        # Combine all analysis
+        complete_analysis = basic_progress + additional_analysis
+        
+        cursor.close()
+        return jsonify(complete_analysis)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)
