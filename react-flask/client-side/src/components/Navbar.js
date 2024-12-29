@@ -11,16 +11,10 @@ function Navbar() {
           <Link to="/" className="link">Home</Link>
         </li>
         <li>
-          <Link to="/about" className="link">About</Link>
-        </li>
-        <li>
           <Link to="/add-course" className="link">Add Course</Link>
         </li>
         <li>
           <Link to="/login" className="link">Login</Link>
-        </li>
-        <li>
-          <Link to="/students" className="link">Students</Link>
         </li>
         {/* <li>
           <Link to="/student-plans" className="link">Student Plans</Link>
@@ -29,7 +23,7 @@ function Navbar() {
           <Link to="/plan-details" className="link">Plan Details</Link>
         </li> */}
         <li>
-          <Link to="/combinedpage" className="link">CombinedPage</Link>
+          <Link to="/combinedpage" className="link">My Academic Plans</Link>
         </li>
         <li>
           <Link to="/courses" className="link">Courses</Link>

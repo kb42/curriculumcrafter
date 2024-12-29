@@ -14,7 +14,7 @@ function Login() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
 
-  const numbers = Array.from({ length: 11 }, (_, i) => 1 + i * 0.5);
+  const numbers = Array.from({ length: 7 }, (_, i) => 1 + i * 0.5);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -163,7 +163,7 @@ function Login() {
               ))}
             </select>
 
-            <label htmlFor="update-egrad">Expected Graduation</label>
+            <label htmlFor="update-egrad">Expected Graduation (in no. years) </label>
             <select
               id="update-egrad"
               name="egrad"
@@ -217,7 +217,7 @@ function Login() {
               ))}
             </select>
 
-            <label htmlFor="update-egrad">Expected Graduation</label>
+            <label htmlFor="update-egrad">Expected Graduation (in no. years) </label>
             <select
               id="update-egrad"
               name="egrad"

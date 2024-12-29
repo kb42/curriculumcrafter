@@ -1,36 +1,28 @@
 from flask import Flask, jsonify, request, g
 from flask_cors import CORS
 import os
-import mysql.connector # type: ignore
-from mysql.connector import IntegrityError, errorcode # type: ignore
+import mysql.connector
+from mysql.connector import IntegrityError, errorcode
+from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SCHEMA_PATH = os.path.join(BASE_DIR, '../../doc/sqlite_dump.sql')
 
 # MySQL configuration
 DB_CONFIG = {
-    'host': 'localhost',      # MySQL server host
-    'user': 'root',  # MySQL username
-    'password': 'Goswami3011',  # MySQL password
-    'database': 'curriculum',  # MySQL database name
+    'host': 'localhost',
+    'user': 'root',
+    'password': '123456',
+    'database': 'curriculum',
+    # 'raise_on_warnings': True
 }
 
 def get_db():
-    """
-    Opens a new database connection if there is none yet for the
-    current application context.
-    """
     if 'db' not in g:
-        g.db = mysql.connector.connect(
-            host=DB_CONFIG['host'],
-            user=DB_CONFIG['user'],
-            password=DB_CONFIG['password'],
-            database=DB_CONFIG['database']
-        )
-        g.db.row_factory = None  # Optional: MySQL doesn’t have an equivalent of `sqlite3.Row`
+        g.db = mysql.connector.connect(**DB_CONFIG)
     return g.db
 
 @app.teardown_appcontext
@@ -41,6 +33,77 @@ def close_db(exception):
     db = g.pop('db', None)
     if db is not None:
         db.close()
+
+def execute_query(query, args=(), one=False, commit=False):
+    """
+    Helper function to execute a database query.
+    """
+    try:
+        conn = get_db()
+        if not conn:
+            raise Exception("Could not establish database connection")
+            
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, args)
+
+        if commit:
+            conn.commit()
+            cursor.close()
+            return None
+
+        if one:
+            result = cursor.fetchone()
+        else:
+            result = cursor.fetchall()
+            
+        cursor.close()
+        return result
+        
+    except mysql.connector.Error as err:
+        print(f"Database error in execute_query: {err}")
+        raise
+    except Exception as e:
+        print(f"Unexpected error in execute_query: {e}")
+        raise
+
+def execute_transaction(queries):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        for query, args in queries:
+            cursor.execute(query, args)
+        conn.commit()
+        return cursor.fetchall()
+    except Exception as e:
+        conn.rollback()
+        print(f"Transaction failed: {e}")
+        raise
+    finally:
+        cursor.close()
+
+@app.route('/')
+def home():
+    return "Flask server is running!"
+
+def create_bypass_log_table():
+    try:
+        query = """
+        CREATE TABLE IF NOT EXISTS Prerequisite_Bypass_Log (
+            BypassID INT PRIMARY KEY AUTO_INCREMENT,
+            NetID VARCHAR(20),
+            CourseID VARCHAR(20),
+            PlanID INT,
+            BypassReason VARCHAR(255),
+            BypassDate DATETIME,
+            FOREIGN KEY (NetID) REFERENCES Student(NetID),
+            FOREIGN KEY (CourseID) REFERENCES Course_Catalog(CourseID),
+            FOREIGN KEY (PlanID) REFERENCES Academic_Plan(PlanID)
+        )
+        """
+        execute_query(query, commit=True)
+        print("Prerequisite_Bypass_Log table created successfully")
+    except Exception as e:
+        print(f"Error creating Prerequisite_Bypass_Log table: {str(e)}")
 
 def init_db():
     """
@@ -73,7 +136,11 @@ def init_db():
             schema = f.read()
             for statement in schema.split(';'):  # Execute each statement
                 if statement.strip():
-                    cursor.execute(statement)
+                    # try:
+                        cursor.execute(statement)
+                    # except mysql.connector.Error as err:
+                        # Only print error and continue, don't stop execution
+                        # print(f"Error executing statement: {err}")
             conn.commit()
 
         print("Schema initialized.")
@@ -86,51 +153,14 @@ def init_db():
         else:
             print(f"Error: {err}")
     finally:
-        if conn.is_connected():
+        if 'conn' in locals() and conn.is_connected():
             cursor.close()
             conn.close()
 
-def execute_query(query, args=(), one=False, commit=False):
-    """
-    Helper function to execute a database query.
-    """
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)  # Fetch rows as dictionaries
-    cursor.execute(query, args)
-
-    data = cursor.fetchall()  # Fetch all rows
-    if commit:
-        conn.commit()  # Commit changes for INSERT/UPDATE/DELETE operations
-
-    cursor.close()
-
-    if one:
-        return data[0] if data else None  # Return a single row as a dictionary
-    else:
-        return data  # Return a list of rows as dictionaries
-
-def execute_transaction(queries):
-    """
-    Helper function to execute multiple queries as a transaction.
-    """
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        # Start transaction
-        for query, args in queries:
-            cursor.execute(query, args)
-
-        # Commit transaction if all queries succeed
-        conn.commit()
-    except Exception as e:
-        # Rollback transaction on any error
-        conn.rollback()
-        print("Transaction failed:", e)
-        raise
-    finally:
-        cursor.close()
 
 init_db()
+# ensure_ap_credits_data()
+create_bypass_log_table()
 
 @app.route('/api/students', methods=['GET'])
 def get_students():
@@ -140,29 +170,77 @@ def get_students():
 
 @app.route('/api/courses', methods=['GET'])
 def get_courses():
-    query = "SELECT * FROM Course_Catalog"
-    courses = execute_query(query)
-    return jsonify(courses)
+    try:
+        print("Attempting to fetch courses...")  # Debug print
+        courses = execute_query("SELECT * FROM Course_Catalog")
+        print(f"Retrieved {len(courses)} courses")  # Debug print
+        return jsonify(courses)
+    except Exception as e:
+        print(f"Error in get_courses: {str(e)}")  # Debug print
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/api/ap-course-mapping', methods=['GET'])
 def get_ap_course_mapping():
-    course_name = request.args.get('courseName')
-    score = request.args.get('score')
-    
-    if not course_name or not score:
-        return jsonify({"error": "Course name and score are required"}), 400
-    
-    query = """
-    SELECT CourseID 
-    FROM AP_Credits 
-    WHERE LOWER(CourseName) = LOWER(%s) AND Score = %s
-    """
-    
     try:
+        course_name = request.args.get('courseName')
+        score = request.args.get('score')
+        
+        print(f"Received request - Course: {course_name}, Score: {score}")
+        
+        if not course_name or not score:
+            return jsonify({
+                "error": "Course name and score are required"
+            }), 400
+
+        try:
+            score = int(score)
+        except ValueError:
+            return jsonify({
+                "error": "Invalid score format"
+            }), 400
+
+        # Modified query to fix the DISTINCT/ORDER BY issue
+        query = """
+        SELECT CourseID, Score
+        FROM AP_Credits 
+        WHERE UPPER(CourseName) = UPPER(%s) 
+        AND Score <= %s 
+        ORDER BY Score DESC 
+        LIMIT 1
+        """
+        
+        print(f"Executing query with params: {course_name}, {score}")
         result = execute_query(query, (course_name, score), one=True)
+        print(f"Query result: {result}")
+
         if result:
-            return jsonify(result)
-        return jsonify({"error": "No course mapping found"}), 404
+            return jsonify({
+                "CourseID": result['CourseID']
+            })
+        else:
+            return jsonify({
+                "message": "No course credit available for this AP score"
+            }), 404
+
+    except Exception as e:
+        print(f"Exception details: {type(e).__name__}: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return jsonify({
+            "error": f"Server error: {str(e)}"
+        }), 500
+    
+# Add a test endpoint to check AP_Credits table content
+@app.route('/api/ap-credits/debug', methods=['GET'])
+def debug_ap_credits():
+    """
+    Debug endpoint to check AP_Credits table content
+    """
+    try:
+        query = "SELECT * FROM AP_Credits"
+        results = execute_query(query)
+        return jsonify(results)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -251,6 +329,10 @@ def create_account():
         return jsonify({"message": "Account created successfully"}), 201
     except IntegrityError as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+
+# Call this function after your database initialization
+
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -446,66 +528,318 @@ def delete_course(planid, courseid):
         print(f"Database error: {str(e)}")
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
-from flask import Flask, request, jsonify
+# from flask import Flask, request, jsonify
 
-app = Flask(__name__)
+# app = Flask(__name__)
+# Add this after your existing imports
 
-@app.route('/api/students/total-credits/<netid>', methods=['GET'])
-def get_total_credits(netid):
+#For semester credits calculation
+@app.route('/api/plan/<int:planid>/semester-credits/<semester>', methods=['GET'])
+def get_semester_credits(planid, semester):
     """
-    Retrieves the total planned credits for a given student using a transaction.
-    Parameters:
-        netid (str): The NetID of the student.
-    Returns:
-        JSON response with total planned credits or an error message.
+    Calculate total credits for a specific semester in a plan
     """
     query = """
-    SELECT DISTINCT s.NetID, s.Name, SUM(cc.Credits) AS Total_Planned_Credits
-    FROM Student s
-    JOIN Academic_Plan ap ON s.NetID = ap.NetID
-    JOIN Planned_Course pc ON ap.PlanID = pc.PlanID
+    SELECT COALESCE(SUM(cc.Credits), 0) as total_credits
+    FROM Planned_Course pc
     JOIN Course_Catalog cc ON pc.CourseID = cc.CourseID
-    WHERE s.NetID = %s
-    GROUP BY s.NetID, s.Name
-    ORDER BY Total_Planned_Credits DESC
-    LIMIT 15;
+    WHERE pc.PlanID = %s AND UPPER(pc.Semester) = UPPER(%s)
     """
-    queries = [(query, (netid,))]
-
     try:
-        result = execute_transaction(queries)
-        return jsonify(result)
+        result = execute_query(query, (planid, semester), one=True)
+        return jsonify({
+            'total_credits': result['total_credits'] if result else 0
+        })
     except Exception as e:
-        print(f"Failed to fetch total credits for NetID {netid}: {e}")
-        return jsonify({"error": f"Failed to fetch total credits for NetID {netid}"}), 500
+        print(f"Error getting semester credits: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+#For prerequisite checking
+@app.route('/api/course/prerequisites/<courseid>', methods=['GET'])
+def check_prerequisites(courseid):
+    """
+    Check prerequisites for a course and return missing ones
+    """
+    try:
+        # Get all prerequisites for the course
+        prereq_query = """
+        SELECT PrerequisiteID 
+        FROM Prerequisite 
+        WHERE CourseID = %s
+        """
+        prerequisites = execute_query(prereq_query, (courseid,))
+        
+        # If no prerequisites, return empty list
+        if not prerequisites:
+            return jsonify({'missingPrerequisites': []})
+
+        prereq_ids = [p['PrerequisiteID'] for p in prerequisites]
+        
+        return jsonify({
+            'missingPrerequisites': prereq_ids
+        })
+    except Exception as e:
+        print(f"Error checking prerequisites: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+#For course addition with validation
+@app.route('/api/course/add-with-validation', methods=['POST'])
+def add_course_with_validation():
+    """
+    Add a course using stored procedure with validation
+    """
+    data = request.get_json()
+    planid = data.get('planid')
+    courseid = data.get('courseid')
+    semester = data.get('semester')
+    netid = data.get('netid')
+    
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        
+        # Call the stored procedure
+        cursor.callproc('AddCourseWithValidation', [planid, courseid, semester, netid])
+        conn.commit()
+        
+        return jsonify({'message': 'Course added successfully'}), 201
+        
+    except mysql.connector.Error as e:
+        if e.errno == 1644:  # Custom error from stored procedure
+            return jsonify({'error': str(e)}), 400
+        print(f"Error adding course: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+
+@app.route('/api/course/add-with-bypass', methods=['POST'])
+def add_course_with_bypass():
+    """
+    Add a course bypassing prerequisites but still maintaining credit limits
+    """
+    data = request.get_json()
+    planid = data.get('planid')
+    courseid = data.get('courseid')
+    semester = data.get('semester')
+    bypass_reason = data.get('bypassReason')
+    netid = data.get('netid')
+    
+    try:
+        # First check semester credit total
+        credit_query = """
+        SELECT COALESCE(SUM(cc.Credits), 0) as current_credits,
+               (SELECT Credits FROM Course_Catalog WHERE CourseID = %s) as new_credits
+        FROM Planned_Course pc
+        JOIN Course_Catalog cc ON pc.CourseID = cc.CourseID
+        WHERE pc.PlanID = %s AND UPPER(pc.Semester) = UPPER(%s)
+        """
+        
+        result = execute_query(credit_query, (courseid, planid, semester), one=True)
+        current_credits = result['current_credits']
+        new_credits = result['new_credits']
+        
+        # Check if adding this course would exceed 18 credits
+        if current_credits + new_credits > 18:
+            return jsonify({
+                'error': 'Adding this course would exceed the maximum credits (18) for the semester'
+            }), 400
+
+        # Check number of courses in semester
+        count_query = """
+        SELECT COUNT(*) as course_count
+        FROM Planned_Course
+        WHERE PlanID = %s AND UPPER(Semester) = UPPER(%s)
+        """
+        count_result = execute_query(count_query, (planid, semester), one=True)
+        
+        if count_result['course_count'] >= 6:
+            return jsonify({
+                'error': 'Cannot add more than 6 courses per semester'
+            }), 400
+
+        # Log the prerequisite bypass
+        log_query = """
+        INSERT INTO Prerequisite_Bypass_Log 
+        (NetID, CourseID, PlanID, BypassReason, BypassDate) 
+        VALUES (%s, %s, %s, %s, NOW())
+        """
+        execute_query(log_query, (netid, courseid, planid, bypass_reason), commit=True)
+
+        # Add the course
+        add_query = """
+        INSERT INTO Planned_Course (PlanID, CourseID, Semester)
+        VALUES (%s, %s, %s)
+        """
+        execute_query(add_query, (planid, courseid, semester), commit=True)
+        
+        return jsonify({'message': 'Course added successfully with prerequisite bypass'}), 201
+        
+    except Exception as e:
+        print(f"Error adding course with bypass: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/students/total-credits/<netid>', methods=['GET'])
+def get_total_credits(netid):
+    planid = request.args.get('planid')  # Get planID from query params
+    
+    if planid:
+        # Query for specific plan's total credits
+        query = """
+        SELECT ap.PlanID,
+               s.NetID,
+               s.Name,
+               COALESCE(SUM(cc.Credits), 0) AS Total_Planned_Credits
+        FROM Academic_Plan ap
+        JOIN Student s ON ap.NetID = s.NetID
+        LEFT JOIN Planned_Course pc ON ap.PlanID = pc.PlanID
+        LEFT JOIN Course_Catalog cc ON pc.CourseID = cc.CourseID
+        WHERE s.NetID = %s AND ap.PlanID = %s
+        GROUP BY ap.PlanID, s.NetID, s.Name
+        """
+        try:
+            result = execute_query(query, (netid, planid), one=True)
+            if result:
+                return jsonify({
+                    "netid": result['NetID'],
+                    "total_credits": result['Total_Planned_Credits'],
+                    "message": f"Hey {result['NetID']}, you have a grand total of {result['Total_Planned_Credits']} credits planned in this plan!"
+                })
+            return jsonify({
+                "netid": netid,
+                "total_credits": 0,
+                "message": f"Hey {netid}, you don't have any credits planned in this plan yet!"
+            })
+        except Exception as e:
+            print(f"Failed to fetch total credits: {e}")
+            return jsonify({"error": f"Failed to fetch total credits"}), 500
 
 @app.route('/api/students/requirements/<netid>', methods=['GET'])
 def find_students_fulfilling_requirements(netid):
-    """
-    Retrieves planned courses that fulfill requirements for a specific student using a transaction.
-    Parameters:
-        netid (str): The NetID of the student.
-    Returns:
-        JSON response with planned courses fulfilling requirements or an error message.
-    """
-    query = """
-    SELECT DISTINCT s.NetID, s.Name, r.MajorID, r.CourseID
-    FROM Student s
-    JOIN Academic_Plan ap ON s.NetID = ap.NetID
-    JOIN Planned_Course pc ON ap.PlanID = pc.PlanID
-    JOIN Requirement r ON r.CourseID = pc.CourseID
-    WHERE r.MajorID = s.MajorID AND s.NetID = %s
-    LIMIT 15;
-    """
-    queries = [(query, (netid,))]
-
     try:
-        result = execute_transaction(queries)
-        return jsonify(result)
+        # Get student's major
+        student_query = "SELECT MajorID FROM Student WHERE NetID = %s"
+        student_result = execute_query(student_query, (netid,), one=True)
+        
+        if not student_result:
+            return jsonify({"error": "Student not found"}), 404
+            
+        major_id = student_result['MajorID']
+        
+        # Get fulfilled requirements
+        fulfilled_query = """
+        SELECT DISTINCT r.CourseID, r.Credits
+        FROM Student s
+        JOIN Academic_Plan ap ON s.NetID = ap.NetID
+        JOIN Planned_Course pc ON ap.PlanID = pc.PlanID
+        JOIN Requirement r ON r.CourseID = pc.CourseID
+        WHERE r.MajorID = s.MajorID AND s.NetID = %s
+        """
+        
+        # Get all requirements for the major
+        all_requirements_query = """
+        SELECT CourseID, Credits
+        FROM Requirement
+        WHERE MajorID = %s
+        """
+        
+        fulfilled_results = execute_query(fulfilled_query, (netid,))
+        all_requirements = execute_query(all_requirements_query, (major_id,))
+        
+        # Create set of fulfilled course IDs
+        fulfilled_course_ids = {course['CourseID'] for course in fulfilled_results}
+        
+        # Separate unfulfilled requirements
+        unfulfilled = [
+            course for course in all_requirements 
+            if course['CourseID'] not in fulfilled_course_ids
+        ]
+        
+        return jsonify({
+            "majorId": major_id,
+            "fulfilled": fulfilled_results,
+            "unfulfilled": unfulfilled
+        })
+        
     except Exception as e:
-        print(f"Failed to fetch students fulfilling requirements for NetID {netid}: {e}")
-        return jsonify({"error": f"Failed to fetch students fulfilling requirements for NetID {netid}"}), 500
+        print(f"Error fetching requirements: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
+#analyze a student's progress:
+# Add this to your server.py
+@app.route('/api/student/progress/<netid>', methods=['GET'])
+def analyze_student_progress(netid):
+    try:
+        # Call the stored procedure
+        cursor = get_db().cursor(dictionary=True)
+        cursor.callproc('AnalyzeStudentProgress', [netid])
+        
+        # Get basic progress data
+        basic_progress = cursor.fetchall()
+        cursor.nextset()  # Move to next result set if any
+        
+        # Get additional analysis data
+        additional_analysis = []
+        
+        # Get major requirements progress
+        req_query = """
+        SELECT r.CourseID, r.Credits,
+               CASE WHEN pc.CourseID IS NOT NULL THEN 'Completed' ELSE 'Pending' END as Status
+        FROM Requirement r
+        JOIN Student s ON r.MajorID = s.MajorID
+        LEFT JOIN Academic_Plan ap ON s.NetID = ap.NetID
+        LEFT JOIN Planned_Course pc ON ap.PlanID = pc.PlanID AND r.CourseID = pc.CourseID
+        WHERE s.NetID = %s
+        """
+        cursor.execute(req_query, (netid,))
+        requirements = cursor.fetchall()
+        
+        # Calculate requirements progress
+        total_req = len(requirements)
+        completed_req = len([r for r in requirements if r['Status'] == 'Completed'])
+        
+        additional_analysis.append({
+            'category': 'Requirements Progress',
+            'detail': f'Completed {completed_req} out of {total_req} required courses'
+        })
 
+        # Get semester-wise progress
+        sem_query = """
+        SELECT pc.Semester, COUNT(*) as CourseCount, SUM(cc.Credits) as Credits
+        FROM Academic_Plan ap
+        JOIN Planned_Course pc ON ap.PlanID = pc.PlanID
+        JOIN Course_Catalog cc ON pc.CourseID = cc.CourseID
+        WHERE ap.NetID = %s
+        GROUP BY pc.Semester
+        ORDER BY pc.Semester
+        """
+        cursor.execute(sem_query, (netid,))
+        semester_progress = cursor.fetchall()
+        
+        for sem in semester_progress:
+            additional_analysis.append({
+                'category': f'Semester {sem["Semester"]}',
+                'detail': f'{sem["CourseCount"]} courses, {sem["Credits"]} credits'
+            })
+
+        # Get expected graduation
+        grad_query = "SELECT Expected_Graduation FROM Student WHERE NetID = %s"
+        cursor.execute(grad_query, (netid,))
+        grad_info = cursor.fetchone()
+        
+        if grad_info:
+            additional_analysis.append({
+                'category': 'Expected Graduation',
+                'detail': f'After {grad_info["Expected_Graduation"]} semesters'
+            })
+
+        # Combine all analysis
+        complete_analysis = basic_progress + additional_analysis
+        
+        cursor.close()
+        return jsonify(complete_analysis)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)

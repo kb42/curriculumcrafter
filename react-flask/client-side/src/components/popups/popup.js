@@ -16,7 +16,6 @@ const APCreditPopup = ({ show, apCredit, apScore, onClose, onSubmit }) => {
 
   const checkAPCredit = async () => {
     setIsLoading(true);
-    console.log("Attempting AP credit check with:", { courseName: apCredit, score: apScore }); // Add this
     if (parseInt(apScore) <= 2) {
       setMessage("HAVE YOU GONE BONKERS?? You've failed the exam dummy! Pick and choose a credited course that you actually passed");
       setCourseId(null);
@@ -28,7 +27,6 @@ const APCreditPopup = ({ show, apCredit, apScore, onClose, onSubmit }) => {
             score: apScore
           }
         });
-        console.log("AP credit response:", response.data); // Add this
         if (response.data.CourseID) {
           setCourseId(response.data.CourseID);
           setMessage(`CONGRATULATIONS!!! You've earned a free ${response.data.CourseID} course, mention which semester you've taken the AP exam in.`);
