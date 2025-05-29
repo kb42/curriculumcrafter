@@ -18,7 +18,7 @@ function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/api/majors')
+    fetch('https://karthikbaga04.pythonanywhere.com/api/majors')
       .then((response) => response.json())
       .then((data) => setMajors(data))
       .catch((error) => console.error('Error fetching majors:', error));
@@ -48,13 +48,13 @@ function Login() {
     let method = '';
 
     if (formMode === 'login') {
-      endpoint = 'http://127.0.0.1:5000/api/login';
+      endpoint = 'https://karthikbaga04.pythonanywhere.com/api/login';
       method = 'POST';
     } else if (formMode === 'create') {
-      endpoint = 'http://127.0.0.1:5000/api/create-account';
+      endpoint = 'https://karthikbaga04.pythonanywhere.com/api/create-account';
       method = 'POST';
     } else if (formMode === 'update') {
-      endpoint = 'http://127.0.0.1:5000/api/update-account';
+      endpoint = 'https://karthikbaga04.pythonanywhere.com/api/update-account';
       method = 'PUT';
     }
 

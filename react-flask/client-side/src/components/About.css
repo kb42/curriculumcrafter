@@ -21,6 +21,19 @@ body {
     text-align: center;
     color: #4CAF50;
   }
+
+  .prototype-warning {
+    background-color: #ffebee;
+    color: #c62828;
+    border-left: 6px solid #c62828;
+    padding: 16px;
+    margin: 20px 0;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(198, 40, 40, 0.2);
+    font-weight: 500;
+    font-size: 1.1em;
+  }
+  
   
   h2 {
     color: #333;

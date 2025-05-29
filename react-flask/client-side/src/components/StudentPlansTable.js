@@ -6,7 +6,7 @@
 //   const netid = "awa2"; // Replace with dynamic value if needed
 
 //   useEffect(() => {
-//     axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`)
+//     axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/${netid}/plans`)
 //       .then((response) => {
 //         setPlans(response.data);
 //       })
@@ -58,7 +58,7 @@ function StudentPlansTable() {
   const netid = location.state?.netid || "defaultNetid"; // Get netid from location.state
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`)
+    axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/${netid}/plans`)
       .then((response) => {
         setPlans(response.data);
       })

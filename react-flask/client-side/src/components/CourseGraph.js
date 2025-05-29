@@ -9,7 +9,7 @@ function CourseGraph({ selectedCourse }) {
   const fetchPrerequisiteGraph = async (courseID) => {
     if (!courseID) return;
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/course/${courseID}/prerequisite-graph`);
+      const response = await fetch(`https://karthikbaga04.pythonanywhere.com/api/course/${courseID}/prerequisite-graph`);
       if (response.ok) {
         const graph = await response.json();
 

@@ -9,6 +9,10 @@ function About() {
       <h1>Curriculum Crafter</h1>
     </header>
 
+    <div className="prototype-warning">
+      Reminder: This is a prototype. Frontend functionality is limited and not fully implemented.
+    </div>
+
     <section class="project-summary">
       <h2>Project Summary</h2>
       <p>
@@ -72,8 +76,8 @@ function About() {
       <h2>Work Distribution</h2>
       <ul>
         <li>Kundan Mergu: Frontend Development, UI/UX Design, Data Visualization</li>
-        <li>Vashishth Goswami: Backend Development, Data Integration, API Requests</li>
-        <li>Karthik Bagavathy: Data Collection, Data Cleaning, Data Analysis</li>
+        <li>Karthik Bagavathy: Backend Development, Data Integration, API Requests</li>
+        <li>Vashishth Goswami: Data Collection, Data Cleaning, Data Analysis</li>
         <li>Harshita Thota: Project Management, Documentation, Testing, Product Design</li>
       </ul>
     </section>

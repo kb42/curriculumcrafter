@@ -6,7 +6,7 @@ function CoursesTable() {
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:5000/api/courses')
+    axios.get('https://karthikbaga04.pythonanywhere.com/api/courses')
       .then((response) => {
         setCourses(response.data);
       })

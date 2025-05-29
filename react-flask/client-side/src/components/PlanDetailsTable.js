@@ -6,7 +6,7 @@ function PlanDetailsTable() {
   const planid = 1; // Replace with dynamic value if needed
 
   useEffect(() => {
-    axios.get(`http://127.0.0.1:5000/api/plan/${planid}`)
+    axios.get(`https://karthikbaga04.pythonanywhere.com/api/plan/${planid}`)
       .then((response) => {
         setCourses(response.data);
       })

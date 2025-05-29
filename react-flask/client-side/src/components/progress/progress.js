@@ -67,7 +67,7 @@ const ProgressAnalysisComponent = ({ analysis, isLoading }) => {
 const analyzeProgress = async () => {
   try {
     setIsLoading(true);
-    const response = await axios.get(`http://127.0.0.1:5000/api/student/progress/${netid}`);
+    const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/progress/${netid}`);
     
     setProgressAnalysis(response.data);
     

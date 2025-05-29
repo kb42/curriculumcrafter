@@ -22,7 +22,7 @@
 
 //   const fetchPlans = async () => {
 //     try {
-//       const response = await axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`);
+//       const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/${netid}/plans`);
 //       setPlans(response.data);
 //       setMessage('');
 //     } catch (error) {
@@ -33,7 +33,7 @@
 
 //   const fetchPlanDetails = async (planID) => {
 //     try {
-//       const response = await axios.get(`http://127.0.0.1:5000/api/plan/${planID}`);
+//       const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/plan/${planID}`);
 //       setPlanDetails(response.data);
 //       setSelectedPlanID(planID);
 //       setMessage('');
@@ -45,7 +45,7 @@
 
 //   const deletePlan = async (planID) => {
 //     try {
-//       await axios.delete(`http://127.0.0.1:5000/api/plan/${planID}`);
+//       await axios.delete(`https://karthikbaga04.pythonanywhere.com/api/plan/${planID}`);
 //       setPlans(plans.filter(plan => plan.PlanID !== planID));
 //       if (planID === selectedPlanID) setPlanDetails([]);
 //       setMessage('Plan deleted successfully.');
@@ -61,7 +61,7 @@
 //       const usedIDs = plans.map(plan => plan.PlanID);
 //       const newPlanID = Math.max(0, ...usedIDs) + 1; // Find the next available ID
   
-//       const response = await axios.post('http://127.0.0.1:5000/api/plan', { netid, planid: newPlanID });
+//       const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/plan', { netid, planid: newPlanID });
   
 //       if (response.status === 201) {
 //         setMessage(`Plan with ID ${newPlanID} added successfully.`);
@@ -84,7 +84,7 @@
 //     }
   
 //     try {
-//       const response = await axios.post('http://127.0.0.1:5000/api/course', newCourseData);
+//       const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/course', newCourseData);
   
 //       if (response.status === 201) {
 //         setMessage('Course added successfully.');
@@ -241,7 +241,7 @@ function CombinedPage() {
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`);
+      const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/${netid}/plans`);
       setPlans(response.data);
       setMessage('');
     } catch (error) {
@@ -252,7 +252,7 @@ function CombinedPage() {
 
   const fetchPlanDetails = async (planID) => {
     try {
-      const response = await axios.get(`http://127.0.0.1:5000/api/plan/${planID}`);
+      const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/plan/${planID}`);
       setPlanDetails(response.data);
       setSelectedPlanID(planID);
       setMessage('');
@@ -264,7 +264,7 @@ function CombinedPage() {
 
   const deletePlan = async (planID) => {
     try {
-      await axios.delete(`http://127.0.0.1:5000/api/plan/${planID}`);
+      await axios.delete(`https://karthikbaga04.pythonanywhere.com/api/plan/${planID}`);
       setPlans(plans.filter(plan => plan.PlanID !== planID));
       if (planID === selectedPlanID) setPlanDetails([]);
       setMessage('Plan deleted successfully.');
@@ -276,7 +276,7 @@ function CombinedPage() {
 
   const deleteCourse = async (courseID) => {
     try {
-      const response = await axios.delete(`http://127.0.0.1:5000/api/plan/${selectedPlanID}/course/${courseID}`);
+      const response = await axios.delete(`https://karthikbaga04.pythonanywhere.com/api/plan/${selectedPlanID}/course/${courseID}`);
       setMessage(response.data.message);
       fetchPlanDetails(selectedPlanID); // Refresh the plan details
     } catch (error) {
@@ -288,7 +288,7 @@ function CombinedPage() {
   const addPlan = async () => {
     try {
       const payload = { netid }; // Only pass the netid, backend handles planid
-      const response = await axios.post('http://127.0.0.1:5000/api/plan', payload);
+      const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/plan', payload);
 
       if (response.status === 201) {
         setMessage(response.data.message);
@@ -312,7 +312,7 @@ function CombinedPage() {
     };
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/api/course', payload);
+      const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/course', payload);
 
       if (response.status === 201) {
         setMessage(response.data.message);
@@ -546,7 +546,7 @@ export default CombinedPage;
 //     try {
 //       console.log(`Fetching credits for semester ${semester}`); // Debug log
 //       const response = await axios.get(
-//         `http://127.0.0.1:5000/api/plan/${planID}/semester-credits/${semester}`
+//         `https://karthikbaga04.pythonanywhere.com/api/plan/${planID}/semester-credits/${semester}`
 //       );
 //       console.log('Semester credits response:', response.data); // Debug log
       
@@ -585,7 +585,7 @@ export default CombinedPage;
       
 //       // First, check prerequisites
 //       const prereqResponse = await axios.get(
-//         `http://127.0.0.1:5000/api/course/prerequisites/${newCourseData.courseid}`
+//         `https://karthikbaga04.pythonanywhere.com/api/course/prerequisites/${newCourseData.courseid}`
 //       );
   
 //       if (prereqResponse.data.missingPrerequisites?.length > 0) {
@@ -610,7 +610,7 @@ export default CombinedPage;
   
 //       console.log('Sending payload:', payload); // Debug log
   
-//       const response = await axios.post('http://127.0.0.1:5000/api/course/add-with-validation', payload);
+//       const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/course/add-with-validation', payload);
       
 //       if (response.status === 201) {
 //         setMessage('Course added successfully');
@@ -643,7 +643,7 @@ export default CombinedPage;
 //         bypassReason: bypassReason,
 //       };
 
-//       const response = await axios.post('http://127.0.0.1:5000/api/course/add-with-bypass', payload);
+//       const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/course/add-with-bypass', payload);
       
 //       if (response.status === 201) {
 //         setMessage('Course added successfully with prerequisite bypass');
@@ -682,7 +682,7 @@ export default CombinedPage;
 //   const analyzeProgress = async () => {
 //     try {
 //       setIsLoading(true);
-//       const response = await axios.get(`http://127.0.0.1:5000/api/student/progress/${netid}`);
+//       const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/progress/${netid}`);
       
 //       // Process and categorize the analysis data
 //       const processedData = {
@@ -735,7 +735,7 @@ export default CombinedPage;
 //     try {
 //       setIsLoading(true);
 //       const response = await axios.get(
-//         `http://127.0.0.1:5000/api/students/total-credits/${netid}`,
+//         `https://karthikbaga04.pythonanywhere.com/api/students/total-credits/${netid}`,
 //         {
 //           params: { planid: selectedPlanID }
 //         }
@@ -755,7 +755,7 @@ export default CombinedPage;
 //   const getRequirementsFulfilled = async () => {
 //   try {
 //     setIsLoading(true);
-//     const response = await axios.get(`http://127.0.0.1:5000/api/students/requirements/${netid}`);
+//     const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/students/requirements/${netid}`);
     
 //     if (response.data) {
 //       setRequirements({
@@ -788,7 +788,7 @@ export default CombinedPage;
 //     try {
 //       console.log('Fetching AP courses...');
 //       setIsLoading(true);
-//       const response = await axios.get('http://127.0.0.1:5000/api/ap-courses');
+//       const response = await axios.get('https://karthikbaga04.pythonanywhere.com/api/ap-courses');
 //       console.log('AP courses response:', response.data);
       
 //       if (Array.isArray(response.data)) {
@@ -810,7 +810,7 @@ export default CombinedPage;
 //   const fetchPlans = async () => {
 //     try {
 //       setIsLoading(true);
-//       const response = await axios.get(`http://127.0.0.1:5000/api/student/${netid}/plans`);
+//       const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/${netid}/plans`);
 //       setPlans(response.data);
 //       setMessage('');
 //     } catch (error) {
@@ -824,7 +824,7 @@ export default CombinedPage;
 //   const fetchPlanDetails = async (planID) => {
 //     try {
 //       setIsLoading(true);
-//       const response = await axios.get(`http://127.0.0.1:5000/api/plan/${planID}`);
+//       const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/plan/${planID}`);
 //       setPlanDetails(response.data);
 //       setSelectedPlanID(planID);
 //       setShowCourseForm(false);
@@ -853,7 +853,7 @@ export default CombinedPage;
 //     try {
 //       setIsLoading(true);
 //       // First get the CourseID based on AP Course and Score
-//       const apResponse = await axios.get('http://127.0.0.1:5000/api/ap-course-mapping', {
+//       const apResponse = await axios.get('https://karthikbaga04.pythonanywhere.com/api/ap-course-mapping', {
 //         params: {
 //           courseName: newAPData.apCredit,
 //           score: newAPData.apScore
@@ -869,7 +869,7 @@ export default CombinedPage;
 //         };
   
 //         // Use the existing course addition endpoint
-//         const response = await axios.post('http://127.0.0.1:5000/api/course', payload);
+//         const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/course', payload);
         
 //         if (response.status === 201) {
 //           setMessage('AP credit course added successfully');
@@ -901,7 +901,7 @@ export default CombinedPage;
 //   const deletePlan = async (planID) => {
 //     try {
 //       setIsLoading(true);
-//       await axios.delete(`http://127.0.0.1:5000/api/plan/${planID}`);
+//       await axios.delete(`https://karthikbaga04.pythonanywhere.com/api/plan/${planID}`);
 //       setPlans(plans.filter(plan => plan.PlanID !== planID));
 //       if (planID === selectedPlanID) {
 //         setPlanDetails([]);
@@ -920,7 +920,7 @@ export default CombinedPage;
 //   const deleteCourse = async (courseID) => {
 //     try {
 //       setIsLoading(true);
-//       await axios.delete(`http://127.0.0.1:5000/api/plan/${selectedPlanID}/course/${courseID}`);
+//       await axios.delete(`https://karthikbaga04.pythonanywhere.com/api/plan/${selectedPlanID}/course/${courseID}`);
 //       setMessage('Course deleted successfully');
 //       fetchPlanDetails(selectedPlanID);
 //     } catch (error) {
@@ -935,7 +935,7 @@ export default CombinedPage;
 //   const addPlan = async () => {
 //     try {
 //       setIsLoading(true);
-//       const response = await axios.post('http://127.0.0.1:5000/api/plan', { netid });
+//       const response = await axios.post('https://karthikbaga04.pythonanywhere.com/api/plan', { netid });
 //       if (response.status === 201) {
 //         setMessage('Plan added successfully');
 //         fetchPlans();

@@ -21,7 +21,7 @@ const APCreditPopup = ({ show, apCredit, apScore, onClose, onSubmit }) => {
       setCourseId(null);
     } else {
       try {
-        const response = await axios.get(`http://127.0.0.1:5000/api/ap-course-mapping`, {
+        const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/ap-course-mapping`, {
           params: {
             courseName: apCredit,
             score: apScore

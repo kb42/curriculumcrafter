@@ -5,7 +5,7 @@ function StudentsTable() {
   const [students, setStudents] = useState([]);
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:5000/api/students')
+    axios.get('https://karthikbaga04.pythonanywhere.com/api/students')
       .then((response) => {
         setStudents(response.data);
       })

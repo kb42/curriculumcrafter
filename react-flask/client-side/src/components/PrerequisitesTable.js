@@ -12,7 +12,7 @@ function PrerequisitesTable() {
   useEffect(() => {
     if (search.length >= 2) {
       axios
-        .get(`http://127.0.0.1:5000/api/courses/search?q=${search}`)
+        .get(`https://karthikbaga04.pythonanywhere.com/api/courses/search?q=${search}`)
         .then((response) => {
           setFilteredCourses(response.data);
           if (response.data.length > 0) {
@@ -35,7 +35,7 @@ function PrerequisitesTable() {
   useEffect(() => {
     if (selectedCourse) {
       axios
-        .get(`http://127.0.0.1:5000/api/course/${selectedCourse}/prerequisites`)
+        .get(`https://karthikbaga04.pythonanywhere.com/api/course/${selectedCourse}/prerequisites`)
         .then((response) => {
           setPrerequisites(response.data);
         })
