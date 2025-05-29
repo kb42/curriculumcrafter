@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, '../../doc/database.db')
+DB_PATH = os.path.join(BASE_DIR, 'database.db')
 
 def get_db():
     """
