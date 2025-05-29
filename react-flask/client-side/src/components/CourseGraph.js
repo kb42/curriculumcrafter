@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// src/components/CourseGraph.js
+import React, { useState, useEffect, useCallback } from 'react';
 import { Network } from 'vis-network/standalone';
 import './CourseGraph.css';
 
@@ -6,108 +7,99 @@ function CourseGraph({ selectedCourse }) {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
   const [message, setMessage] = useState('');
 
-  const fetchPrerequisiteGraph = async (courseID) => {
-    if (!courseID) return;
-    try {
-      const response = await fetch(`https://karthikbaga04.pythonanywhere.com/api/course/${courseID}/prerequisite-graph`);
-      if (response.ok) {
-        const graph = await response.json();
-
-        if (graph.nodes.length === 0) {
-          setMessage('No Prerequisites for this course');
-          setGraphData({ nodes: [], edges: [] }); // Clear the graph
+  const fetchPrerequisiteGraph = useCallback(
+    async (courseID) => {
+      if (!courseID) return;
+      try {
+        const response = await fetch(
+          `https://karthikbaga04.pythonanywhere.com/api/course/${courseID}/prerequisite-graph`
+        );
+        if (!response.ok) {
+          setMessage('Invalid Search');
+          setGraphData({ nodes: [], edges: [] });
           return;
         }
-
-        const colors = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722']; // Green, Blue, Yellow, Red
-        const nodes = graph.nodes.map((node, index) => ({
+        const graph = await response.json();
+        if (graph.nodes.length === 0) {
+          setMessage('No Prerequisites for this course');
+          setGraphData({ nodes: [], edges: [] });
+          return;
+        }
+        const colors = ['#4CAF50', '#2196F3', '#FFC107', '#FF5722'];
+        const nodes = graph.nodes.map((node, idx) => ({
           id: node.id,
           label: node.label,
           color: node.isRoot
-            ? '#FF5733' // Unique color for the root node
-            : colors[index % colors.length], // Assign colors cyclically
+            ? '#FF5733'
+            : colors[idx % colors.length],
           font: { size: 18, color: '#fff' },
-          size: node.isRoot ? 50 : 40, // Larger size for root node
+          size: node.isRoot ? 50 : 40,
         }));
-
         const edges = graph.edges.map((edge) => ({
           from: edge.from,
           to: edge.to,
           color: { color: '#848484', highlight: '#4CAF50', hover: '#2196F3' },
           arrows: 'to',
         }));
-
         setGraphData({ nodes, edges });
-        setMessage(''); // Clear any previous messages
-      } else {
+        setMessage('');
+      } catch (error) {
+        console.error('Error:', error);
         setMessage('Invalid Search');
-        setGraphData({ nodes: [], edges: [] }); // Clear the graph
+        setGraphData({ nodes: [], edges: [] });
       }
-    } catch (error) {
-      console.error('Error:', error);
-      setMessage('Invalid Search');
-      setGraphData({ nodes: [], edges: [] }); // Clear the graph
-    }
-  };
+    },
+    []
+  );
 
-  const renderGraph = () => {
+  // renderGraph only changes when graphData changes
+  const renderGraph = useCallback(() => {
     const container = document.getElementById('course-graph');
-    if (container && graphData.nodes.length && graphData.edges.length) {
+    if (
+      container &&
+      graphData.nodes.length > 0 &&
+      graphData.edges.length > 0
+    ) {
       const network = new Network(container, graphData, {
         layout: {
           hierarchical: {
             enabled: true,
-            levelSeparation: 200, // Horizontal spacing
-            nodeSpacing: 150, // Vertical spacing
-            direction: 'LR', // Left-to-right layout
+            levelSeparation: 200,
+            nodeSpacing: 150,
+            direction: 'LR',
           },
         },
-        nodes: {
-          shape: 'circle',
-          borderWidth: 2,
-          shadow: true,
-        },
+        nodes: { shape: 'circle', borderWidth: 2, shadow: true },
         edges: {
-          smooth: {
-            type: 'cubicBezier',
-            roundness: 0.5,
-          },
+          smooth: { type: 'cubicBezier', roundness: 0.5 },
           arrows: { to: { enabled: true, scaleFactor: 0.8 } },
         },
-        interaction: {
-          hover: true,
-          zoomView: true,
-        },
+        interaction: { hover: true, zoomView: true },
       });
-
-      // Attach event listener for node clicks
       network.on('click', (params) => {
         if (params.nodes.length > 0) {
-          const clickedNodeId = params.nodes[0];
-          fetchPrerequisiteGraph(clickedNodeId); // Fetch the graph for the clicked course
+          fetchPrerequisiteGraph(params.nodes[0]);
         }
       });
     }
-  };
+  }, [graphData, fetchPrerequisiteGraph]);
 
   useEffect(() => {
     if (selectedCourse) {
       fetchPrerequisiteGraph(selectedCourse);
     } else {
-      // Clear graph if no course selected
       setGraphData({ nodes: [], edges: [] });
       setMessage('');
     }
-  }, [selectedCourse]);
+  }, [selectedCourse, fetchPrerequisiteGraph]);
 
   useEffect(() => {
     renderGraph();
-  }, [graphData]);
+  }, [renderGraph]);
 
   return (
     <div style={{ marginTop: '20px' }}>
       <h2 style={{ textAlign: 'center' }}>Course Prerequisite Path</h2>
-
       {message && (
         <div
           style={{
@@ -125,7 +117,6 @@ function CourseGraph({ selectedCourse }) {
           {message}
         </div>
       )}
-
       <div
         id="course-graph"
         style={{
