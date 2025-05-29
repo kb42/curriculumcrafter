@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Home from './components/Home';
+// import Home from './components/Home';
 import About from './components/About';
 import AddCourse from './components/AddCourse';
 import Login from './components/Login';
@@ -12,17 +12,17 @@ import CombinedPage from './components/CombinedPage';
 import CoursesTable from './components/CoursesTable';
 import PrerequisitesTable from './components/PrerequisitesTable';
 
-const graphData = {
-  nodes: [
-    { id: 1, label: 'CS124' },
-    { id: 2, label: 'CS128' },
-    { id: 3, label: 'CS225' },
-  ],
-  edges: [
-    { from: 1, to: 2 },
-    { from: 2, to: 3 },
-  ],
-};
+// const graphData = {
+//   nodes: [
+//     { id: 1, label: 'CS124' },
+//     { id: 2, label: 'CS128' },
+//     { id: 3, label: 'CS225' },
+//   ],
+//   edges: [
+//     { from: 1, to: 2 },
+//     { from: 2, to: 3 },
+//   ],
+// };
 
 function App() {
   return (

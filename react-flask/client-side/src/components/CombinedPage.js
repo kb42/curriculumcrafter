@@ -224,7 +224,8 @@ import axios from 'axios';
 import './CombinedPage.css';
 
 function CombinedPage() {
-  const [netid, setNetID] = useState(localStorage.getItem('netid') || '') 
+  // const [netid, setNetID] = useState(localStorage.getItem('netid') || '') 
+  const netid = localStorage.getItem('netid') || '';
   const [plans, setPlans] = useState([]);
   const [selectedPlanID, setSelectedPlanID] = useState(null);
   const [planDetails, setPlanDetails] = useState([]);

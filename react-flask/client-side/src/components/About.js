@@ -65,10 +65,10 @@ function About() {
     <section class="data-sources">
       <h2>Data Sources</h2>
       <ul>
-        <li><a href="https://citl.illinois.edu/citl-101/measurement-evaluation/placement-proficiency/cutoffs-2024-2025/2024-advanced-placement-program" target="_blank">2024 Advanced Placement Program</a></li>
-        <li><a href="https://citl.illinois.edu/citl-101/measurement-evaluation/placement-proficiency/proficiency-testing/subjects-with-proficiency-exams" target="_blank">Departmental Proficiency Exams</a></li>
-        <li><a href="https://www.transferology.com/index.htm" target="_blank">Transferology</a></li>
-        <li><a href="https://courses.illinois.edu/" target="_blank">Course Explorer</a></li>
+        <li><a href="https://citl.illinois.edu/citl-101/measurement-evaluation/placement-proficiency/cutoffs-2024-2025/2024-advanced-placement-program" target="_blank" rel="noreferrer">2024 Advanced Placement Program</a></li>
+        <li><a href="https://citl.illinois.edu/citl-101/measurement-evaluation/placement-proficiency/proficiency-testing/subjects-with-proficiency-exams" target="_blank" rel="noreferrer">Departmental Proficiency Exams</a></li>
+        <li><a href="https://www.transferology.com/index.htm" target="_blank" rel="noreferrer">Transferology</a></li>
+        <li><a href="https://courses.illinois.edu/" target="_blank" rel="noreferrer">Course Explorer</a></li>
       </ul>
     </section>
 
