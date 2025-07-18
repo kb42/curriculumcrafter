@@ -52,6 +52,10 @@ function PrerequisitesTable() {
     <div className="prerequisites-container">
       <h2>Course Prerequisites</h2>
 
+      <div className="prototype-warning">
+        Computer Screen Strongly Recommended for this feature!
+      </div>
+
       <label htmlFor="course-search">Search for a Course:</label>
       <input
         type="text"
