@@ -1,0 +1,39 @@
+.quick-dock {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 50;
+  padding: 14px;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  min-width: 220px;
+ }
+
+.quick-dock__title {
+  font-weight: 700;
+  color: var(--muted-strong);
+  margin-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+
+.quick-dock__links {
+  display: grid;
+  gap: 8px;
+}
+
+.quick-dock .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  .quick-dock {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .quick-dock__links {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+}

@@ -1,5 +1,6 @@
 import React from 'react';
 import './progress.css';
+import API_BASE_URL from '../../config';
 
 const ProgressAnalysisComponent = ({ analysis, isLoading }) => {
   if (isLoading) {
@@ -67,7 +68,7 @@ const ProgressAnalysisComponent = ({ analysis, isLoading }) => {
 const analyzeProgress = async () => {
   try {
     setIsLoading(true);
-    const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/progress/${netid}`);
+    const response = await axios.get(`${API_BASE_URL}/api/student/progress/${netid}`);
     
     setProgressAnalysis(response.data);
     

@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Network } from 'vis-network/standalone';
 import './CourseGraph.css';
+import API_BASE_URL from '../config';
 
 function CourseGraph({ selectedCourse }) {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
@@ -12,7 +13,7 @@ function CourseGraph({ selectedCourse }) {
       if (!courseID) return;
       try {
         const response = await fetch(
-          `https://karthikbaga04.pythonanywhere.com/api/course/${courseID}/prerequisite-graph`
+          `${API_BASE_URL}/api/course/${courseID}/prerequisite-graph`
         );
         if (!response.ok) {
           setMessage('Invalid Search');
@@ -98,34 +99,22 @@ function CourseGraph({ selectedCourse }) {
   }, [renderGraph]);
 
   return (
-    <div style={{ marginTop: '20px' }}>
-      <h2 style={{ textAlign: 'center' }}>Course Prerequisite Path</h2>
+    <div className="glass-card stack graph-card">
+      <div className="section-heading">
+        <div>
+          <p className="eyebrow">Graph</p>
+          <h3>Course Prerequisite Path</h3>
+        </div>
+        <span className="chip">{selectedCourse || 'Select a course'}</span>
+      </div>
       {message && (
-        <div
-          style={{
-            backgroundColor: '#FFECEC',
-            color: '#D8000C',
-            padding: '10px',
-            margin: '10px auto',
-            borderRadius: '5px',
-            width: '50%',
-            textAlign: 'center',
-            border: '1px solid #D8000C',
-            fontWeight: 'bold',
-          }}
-        >
+        <div className="inline-alert error" style={{ justifyContent: 'center' }}>
           {message}
         </div>
       )}
       <div
         id="course-graph"
-        style={{
-          width: '100%',
-          height: '700px',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          backgroundColor: '#f9f9f9',
-        }}
+        className="graph-canvas"
       />
     </div>
   );

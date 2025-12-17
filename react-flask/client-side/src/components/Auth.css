@@ -1,0 +1,136 @@
+.auth-layout {
+  align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.auth-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+
+.password-input-wrapper .input {
+  flex: 1;
+}
+
+.toggle-password {
+  height: 48px;
+  padding: 0 14px;
+}
+
+.has-error {
+  border-color: rgba(244, 63, 94, 0.7) !important;
+  background: rgba(244, 63, 94, 0.08) !important;
+}
+
+.error-text {
+  display: block;
+  color: #fca5a5;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hint-text {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.password-strength {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.strength-bar-container {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.strength-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.form-footer {
+  text-align: center;
+  color: var(--muted);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--accent-2);
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: #a5b4fc;
+}
+
+.loading-spinner {
+  display: inline-block;
+}
+
+@media (max-width: 960px) {
+  .auth-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-switch {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .auth-hero {
+    text-align: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 16px;
+  }
+
+  .tab-switch {
+    grid-template-columns: 1fr;
+  }
+
+  .password-input-wrapper {
+    flex-direction: column;
+  }
+
+  .toggle-password {
+    width: 100%;
+    justify-content: center;
+    height: auto;
+    padding: 10px;
+  }
+}
