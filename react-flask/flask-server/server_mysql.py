@@ -75,6 +75,32 @@ def verify_password(password, password_hash):
 
 
 # ============================================================================
+# HEALTH CHECK ENDPOINT
+# ============================================================================
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint for monitoring services"""
+    try:
+        # Test database connection
+        db.session.execute(db.text('SELECT 1'))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+        return jsonify({
+            "status": "unhealthy",
+            "database": db_status,
+            "timestamp": datetime.utcnow().isoformat()
+        }), 500
+
+    return jsonify({
+        "status": "healthy",
+        "database": db_status,
+        "timestamp": datetime.utcnow().isoformat()
+    }), 200
+
+
+# ============================================================================
 # AUTHENTICATION ENDPOINTS
 # ============================================================================
 
