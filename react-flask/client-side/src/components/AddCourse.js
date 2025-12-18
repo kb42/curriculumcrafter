@@ -2,26 +2,63 @@ import React from 'react';
 import './AddCourse.css'; // Import the CSS file
 
 function AddCourse() {
-    // const numbers = Array.from({ length: 11 }, (_, i) => 1 + i * 0.5);
-    
   return (
-    <div id="add-course-container">
-      <h1>Add Course</h1>
-      <form id="add-course-form" action="/action_page.php">
+    <div className="page-shell">
+      <div className="page-grid">
+        <div className="glass-card hero-card">
+          <p className="eyebrow">Course Admin</p>
+          <h1>Add Course</h1>
+          <p className="muted-strong">
+            Drop in a new course so it can be surfaced across search, prerequisites, and planning flows.
+          </p>
+          <div className="badge-row" style={{ marginTop: '16px' }}>
+            <span className="tag accent">Quick add</span>
+            <span className="tag soft">Staff only</span>
+          </div>
+        </div>
 
-        <label htmlFor="courseid">CourseID</label>
-        <input
-          type="text"
-          id="majorid"
-          name="majorid"
-          placeholder="CS 411"
-        />
+        <div className="glass-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Course details</p>
+              <h3>Core information</h3>
+            </div>
+            <span className="chip">Manual entry</span>
+          </div>
 
-        <label htmlFor="credits">Credits</label>
-        <input type="text" id="name" name="name" placeholder="3" />
+          <form
+            id="add-course-form"
+            className="form-grid"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <div className="field">
+              <label htmlFor="courseid">Course ID</label>
+              <input
+                type="text"
+                id="courseid"
+                name="courseid"
+                placeholder="CS 411"
+                className="input"
+              />
+            </div>
 
-        <input type="submit" value="Submit" class="courseSub"/>
-      </form>
+            <div className="field">
+              <label htmlFor="credits">Credits</label>
+              <input
+                type="text"
+                id="credits"
+                name="credits"
+                placeholder="3"
+                className="input"
+              />
+            </div>
+
+            <button type="submit" className="btn primary">
+              Submit
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

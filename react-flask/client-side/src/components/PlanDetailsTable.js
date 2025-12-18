@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 function PlanDetailsTable() {
   const [courses, setCourses] = useState([]);
   const planid = 1; // Replace with dynamic value if needed
 
   useEffect(() => {
-    axios.get(`https://karthikbaga04.pythonanywhere.com/api/plan/${planid}`)
+    axios.get(`${API_BASE_URL}/api/plan/${planid}`)
       .then((response) => {
         setCourses(response.data);
       })

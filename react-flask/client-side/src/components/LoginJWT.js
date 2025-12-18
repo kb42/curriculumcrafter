@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import API_BASE_URL from '../config';
 
-function Login() {
+function LoginJWT() {
   const [formMode, setFormMode] = useState('login');
   const [formData, setFormData] = useState({
+    username: '',
+    password: '',
     name: '',
     netid: '',
     majorid: '',
@@ -30,6 +32,8 @@ function Login() {
     setMessage('');
     setMessageType('');
     setFormData({
+      username: '',
+      password: '',
       name: '',
       netid: '',
       majorid: '',
@@ -46,40 +50,74 @@ function Login() {
     e.preventDefault();
 
     let endpoint = '';
-    let method = '';
+    let method = 'POST';
+    let payload = {};
 
     if (formMode === 'login') {
-      endpoint = `${API_BASE_URL}/api/login`;
-      method = 'POST';
+      endpoint = `${API_BASE_URL}/api/auth/login`;
+      payload = {
+        username: formData.username,
+        password: formData.password
+      };
     } else if (formMode === 'create') {
-      endpoint = `${API_BASE_URL}/api/create-account`;
-      method = 'POST';
+      endpoint = `${API_BASE_URL}/api/auth/register`;
+      payload = {
+        username: formData.username,
+        password: formData.password,
+        name: formData.name,
+        netid: formData.netid,
+        majorid: formData.majorid,
+        egrad: formData.egrad
+      };
     } else if (formMode === 'update') {
-      endpoint = `${API_BASE_URL}/api/update-account`;
+      endpoint = `${API_BASE_URL}/api/auth/update-profile`;
       method = 'PUT';
+      payload = {
+        name: formData.name,
+        majorid: formData.majorid,
+        egrad: formData.egrad
+      };
     }
 
     try {
+      const headers = { 'Content-Type': 'application/json' };
+
+      // Add JWT token for update operation
+      if (formMode === 'update') {
+        const token = localStorage.getItem('token');
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+      }
+
       const response = await fetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        headers,
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
+
       if (response.ok) {
         const successMessage =
           formMode === 'login'
             ? 'Login successful!'
             : formMode === 'create'
-            ? 'Account created successfully!'
+            ? 'Account created successfully! Please login.'
             : 'Information updated successfully!';
+
         setMessage(successMessage);
         setMessageType('success');
 
         if (formMode === 'login') {
-          localStorage.setItem('netid', formData.netid);
+          // Store JWT token and user info
+          localStorage.setItem('token', result.access_token);
+          localStorage.setItem('netid', result.netid);
+          localStorage.setItem('name', result.name);
           setTimeout(() => navigate('/combinedpage'), 2000);
+        } else if (formMode === 'create') {
+          // After successful registration, switch to login mode
+          setTimeout(() => toggleForm('login'), 2000);
         }
       } else {
         setMessage(result.error || 'Something went wrong.');
@@ -122,12 +160,63 @@ function Login() {
       </h1>
 
       <form onSubmit={handleSubmit}>
-        {formMode !== 'create' && (
+        {/* Login Mode */}
+        {formMode === 'login' && (
           <>
-            <label htmlFor="login-netid">NetID</label>
+            <label htmlFor="login-username">Username</label>
             <input
               type="text"
-              id="login-netid"
+              id="login-username"
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              placeholder="Enter your username"
+              required
+            />
+
+            <label htmlFor="login-password">Password</label>
+            <input
+              type="password"
+              id="login-password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Enter your password"
+              required
+            />
+          </>
+        )}
+
+        {/* Create Account Mode */}
+        {formMode === 'create' && (
+          <>
+            <label htmlFor="create-username">Username</label>
+            <input
+              type="text"
+              id="create-username"
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              placeholder="Choose a username"
+              required
+            />
+
+            <label htmlFor="create-password">Password</label>
+            <input
+              type="password"
+              id="create-password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              placeholder="Choose a password"
+              required
+              minLength="6"
+            />
+
+            <label htmlFor="create-netid">NetID</label>
+            <input
+              type="text"
+              id="create-netid"
               name="netid"
               value={formData.netid}
               onChange={handleInputChange}
@@ -135,26 +224,24 @@ function Login() {
               required
             />
 
-            <label htmlFor="update-name">Name</label>
+            <label htmlFor="create-name">Name</label>
             <input
               type="text"
-              id="update-name"
+              id="create-name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="Enter your name"
+              placeholder="Enter your full name"
+              required
             />
-          </>
-        )}
 
-        {formMode === 'update' && (
-          <>
-            <label htmlFor="update-majorid">Major Name</label>
+            <label htmlFor="create-majorid">Major</label>
             <select
-              id="update-majorid"
+              id="create-majorid"
               name="majorid"
               value={formData.majorid}
               onChange={handleInputChange}
+              required
             >
               <option value="">Select a major</option>
               {majors.map((major) => (
@@ -164,12 +251,13 @@ function Login() {
               ))}
             </select>
 
-            <label htmlFor="update-egrad">Expected Graduation</label>
+            <label htmlFor="create-egrad">Expected Graduation (years)</label>
             <select
-              id="update-egrad"
+              id="create-egrad"
               name="egrad"
               value={formData.egrad}
               onChange={handleInputChange}
+              required
             >
               {numbers.map((num) => (
                 <option key={num} value={num}>
@@ -180,19 +268,9 @@ function Login() {
           </>
         )}
 
-        {formMode === 'create' && (
+        {/* Update Information Mode */}
+        {formMode === 'update' && (
           <>
-            <label htmlFor="login-netid">NetID</label>
-            <input
-              type="text"
-              id="login-netid"
-              name="netid"
-              value={formData.netid}
-              onChange={handleInputChange}
-              placeholder="Enter your NetID"
-              required
-            />
-
             <label htmlFor="update-name">Name</label>
             <input
               type="text"
@@ -203,7 +281,7 @@ function Login() {
               placeholder="Enter your name"
             />
 
-            <label htmlFor="update-majorid">Major Name</label>
+            <label htmlFor="update-majorid">Major</label>
             <select
               id="update-majorid"
               name="majorid"
@@ -218,7 +296,7 @@ function Login() {
               ))}
             </select>
 
-            <label htmlFor="update-egrad">Expected Graduation</label>
+            <label htmlFor="update-egrad">Expected Graduation (years)</label>
             <select
               id="update-egrad"
               name="egrad"
@@ -251,4 +329,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default LoginJWT;

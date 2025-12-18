@@ -51,6 +51,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom'; // Import useLocation to access the route state
+import API_BASE_URL from '../config';
 
 function StudentPlansTable() {
   const [plans, setPlans] = useState([]);
@@ -58,7 +59,7 @@ function StudentPlansTable() {
   const netid = location.state?.netid || "defaultNetid"; // Get netid from location.state
 
   useEffect(() => {
-    axios.get(`https://karthikbaga04.pythonanywhere.com/api/student/${netid}/plans`)
+    axios.get(`${API_BASE_URL}/api/student/${netid}/plans`)
       .then((response) => {
         setPlans(response.data);
       })

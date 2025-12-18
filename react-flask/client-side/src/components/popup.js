@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './popup.css';
+import API_BASE_URL from '../config';
 
 const APCreditPopup = ({ show, apCredit, apScore, onClose, onSubmit }) => {
   const [semester, setSemester] = useState('');
@@ -22,7 +23,7 @@ const APCreditPopup = ({ show, apCredit, apScore, onClose, onSubmit }) => {
       setCourseId(null);
     } else {
       try {
-        const response = await axios.get(`https://karthikbaga04.pythonanywhere.com/api/ap-course-mapping`, {
+        const response = await axios.get(`${API_BASE_URL}/api/ap-course-mapping`, {
           params: {
             courseName: apCredit,
             score: apScore
