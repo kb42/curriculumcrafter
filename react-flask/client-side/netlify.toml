@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  # This will be overridden when you deploy - update with your actual Render URL
+  REACT_APP_API_URL = "https://curriculumcrafter-api.onrender.com"

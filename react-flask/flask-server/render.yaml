@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: curriculumcrafter-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server_mysql:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        sync: false
+      - key: MYSQL_DATABASE
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: JWT_ACCESS_TOKEN_EXPIRES
+        value: 3600
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: False
