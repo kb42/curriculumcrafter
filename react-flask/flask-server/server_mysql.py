@@ -394,50 +394,6 @@ def delete_plan(planid):
         return jsonify({"error": f"Failed to delete plan: {str(e)}"}), 500
 
 
-@app.route('/api/course', methods=['POST'])
-@jwt_required()
-def add_course():
-    """Add a course to a plan (protected)"""
-    current_netid = get_jwt_identity()
-    data = request.get_json()
-
-    planid = data.get('planid')
-    courseid = data.get('courseid')
-    semester = data.get('semester')
-
-    if not all([planid, courseid, semester]):
-        return jsonify({"error": "PlanID, CourseID, and Semester are required"}), 400
-
-    # Verify plan belongs to current user
-    plan = AcademicPlan.query.filter_by(PlanID=planid).first()
-    if not plan or plan.NetID != current_netid:
-        return jsonify({"error": "Unauthorized access to plan"}), 403
-
-    # Verify course exists
-    course = CourseCatalog.query.filter_by(CourseID=courseid).first()
-    if not course:
-        return jsonify({"error": "Course not found"}), 404
-
-    # Check if course already in plan
-    existing = PlannedCourse.query.filter_by(PlanID=planid, CourseID=courseid).first()
-    if existing:
-        return jsonify({"error": "Course already in plan"}), 409
-
-    try:
-        planned_course = PlannedCourse(
-            PlanID=planid,
-            CourseID=courseid,
-            Semester=semester
-        )
-        db.session.add(planned_course)
-        db.session.commit()
-
-        return jsonify({"message": "Course added to plan"}), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"Failed to add course: {str(e)}"}), 500
-
-
 @app.route('/api/plan/<int:planid>/course/<courseid>', methods=['DELETE'])
 @jwt_required()
 def delete_course(planid, courseid):

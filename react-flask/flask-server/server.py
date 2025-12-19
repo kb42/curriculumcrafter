@@ -262,54 +262,6 @@ def add_plan():
         return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 
-@app.route('/api/course', methods=['POST'])
-def add_course():
-    data = request.get_json()
-    planid = data.get('planid')
-    courseid = data.get('courseid').strip().upper()  # Ensure uppercase
-    semester = data.get('semester').strip().upper()  # Ensure uppercase
-
-    print(f"Received payload: PlanID={planid}, CourseID={courseid}, Semester={semester}")
-
-    if not all([planid, courseid, semester]):
-        return jsonify({"error": "All fields (planid, courseid, semester) are required"}), 400
-
-    try:
-        # Check if the PlanID exists
-        plan_exists = execute_query("SELECT 1 FROM Academic_Plan WHERE PlanID = ?", (planid,), one=True)
-        print(f"Plan exists check: {plan_exists}")
-        if not plan_exists:
-            return jsonify({"error": f"PlanID {planid} does not exist"}), 404
-
-        # Check if CourseID exists
-        course_exists = execute_query("SELECT 1 FROM Course_Catalog WHERE LOWER(CourseID) = LOWER(?)", (courseid,), one=True)
-        print(f"Course exists check: {course_exists}")
-        if not course_exists:
-            return jsonify({"error": f"CourseID {courseid} does not exist in Course_Catalog"}), 404
-
-        # Check for duplicate entries
-        duplicate_check = execute_query(
-            "SELECT 1 FROM Planned_Course WHERE PlanID = ? AND CourseID = ?",
-            (planid, courseid),
-            one=True
-        )
-        print(f"Duplicate entry check: {duplicate_check}")
-        if duplicate_check:
-            return jsonify({"error": f"Course {courseid} is already added to PlanID {planid}"}), 409
-
-        # Add the course
-        execute_query(
-            "INSERT INTO Planned_Course (PlanID, CourseID, Semester) VALUES (?, ?, ?)",
-            (planid, courseid, semester),
-            commit=True
-        )
-        print("Course added successfully")
-        return jsonify({"message": f"Course {courseid} added to PlanID {planid} successfully"}), 201
-    except sqlite3.IntegrityError as e:
-        print(f"Database error: {str(e)}")
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-
-
 @app.route('/api/plan/<int:planid>', methods=['DELETE'])
 def delete_plan(planid):
     try:

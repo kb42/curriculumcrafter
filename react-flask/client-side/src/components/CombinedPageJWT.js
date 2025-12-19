@@ -12,11 +12,6 @@ function CombinedPageJWT() {
   const [selectedPlanID, setSelectedPlanID] = useState(null);
   const [planDetails, setPlanDetails] = useState([]);
   const [message, setMessage] = useState('');
-  const [newCourseData, setNewCourseData] = useState({
-    planid: '',
-    courseid: '',
-    semester: '',
-  });
 
   // Check authentication on mount
   useEffect(() => {
@@ -135,39 +130,6 @@ function CombinedPageJWT() {
       setMessage('Error adding new plan.');
     }
   }, [netid, fetchPlans]);
-
-  const addCourse = useCallback(
-    async (e) => {
-      e.preventDefault();
-      const payload = {
-        planid: parseInt(newCourseData.planid),
-        courseid: newCourseData.courseid.toUpperCase(),
-        semester: newCourseData.semester.toUpperCase(),
-      };
-
-      try {
-        const response = await authPost('/api/course', payload);
-        const data = await response.json();
-
-        if (response.ok) {
-          setMessage(data.message || 'Course added successfully');
-          fetchPlanDetails(newCourseData.planid);
-          // Clear form
-          setNewCourseData({
-            planid: newCourseData.planid,
-            courseid: '',
-            semester: '',
-          });
-        } else {
-          setMessage(data.error || 'Error adding new course.');
-        }
-      } catch (error) {
-        console.error('Error adding new course:', error);
-        setMessage('Error adding new course.');
-      }
-    },
-    [newCourseData, fetchPlanDetails]
-  );
 
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
@@ -303,72 +265,6 @@ function CombinedPageJWT() {
             ) : (
               <p className="no-data-message">No courses in this plan yet.</p>
             )}
-
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Add course</p>
-                <h4>Add to plan</h4>
-              </div>
-              <span className="chip soft">Protected save</span>
-            </div>
-            <form
-              className="combined-page-form"
-              onSubmit={addCourse}
-            >
-              <label>
-                Plan ID:
-                <input
-                  type="number"
-                  name="planid"
-                  value={newCourseData.planid}
-                  onChange={(e) =>
-                    setNewCourseData({
-                      ...newCourseData,
-                      planid: e.target.value,
-                    })
-                  }
-                  className="input"
-                  required
-                />
-              </label>
-              <label>
-                Course ID:
-                <input
-                  type="text"
-                  name="courseid"
-                  value={newCourseData.courseid}
-                  onChange={(e) =>
-                    setNewCourseData({
-                      ...newCourseData,
-                      courseid: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., CS225"
-                  className="input"
-                  required
-                />
-              </label>
-              <label>
-                Semester:
-                <input
-                  type="text"
-                  name="semester"
-                  value={newCourseData.semester}
-                  onChange={(e) =>
-                    setNewCourseData({
-                      ...newCourseData,
-                      semester: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., FA23"
-                  className="input"
-                  required
-                />
-              </label>
-              <button className="btn primary" type="submit">
-                Add Course
-              </button>
-            </form>
           </div>
         )}
       </div>

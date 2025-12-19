@@ -10,7 +10,6 @@ function QuickActions() {
     { to: '/combinedpage', label: 'Plans' },
     { to: '/courses', label: 'Courses' },
     { to: '/prerequisites', label: 'Prereqs' },
-    { to: '/add-course', label: 'Add Course' },
   ];
 
   return (
