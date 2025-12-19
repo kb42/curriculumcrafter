@@ -45,7 +45,11 @@ jobs:
       - name: Check for merge conflicts
         run: |
           echo "Checking for merge conflict markers..."
-          if grep -r "<<<<<<< HEAD\|=======\|>>>>>>>" --include="*.py" --include="*.js" --include="*.jsx" --include="*.css" .; then
+          # Exclude venv, node_modules, and only check actual source files
+          if grep -r "^<<<<<<< HEAD\|^=======\$\|^>>>>>>>" \
+            --include="*.py" --include="*.js" --include="*.jsx" --include="*.css" \
+            --exclude-dir=venv --exclude-dir=flask_env --exclude-dir=node_modules \
+            react-flask/client-side/src react-flask/flask-server/*.py 2>/dev/null; then
             echo "✗ ERROR: Merge conflict markers found!"
             exit 1
           else
