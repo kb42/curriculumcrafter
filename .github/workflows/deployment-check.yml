@@ -76,24 +76,14 @@ jobs:
             exit 1
           fi
 
-      - name: Verify production environment
-        run: |
-          echo "Checking production environment configuration..."
-          if [ -f "react-flask/client-side/.env.production" ]; then
-            echo "✓ .env.production found"
-            cat react-flask/client-side/.env.production
-          else
-            echo "Warning: .env.production not found"
-          fi
-
       - name: Check API URL configuration
         run: |
-          echo "Verifying API URL is set..."
-          if grep -q "REACT_APP_API_URL" react-flask/client-side/.env.production 2>/dev/null || \
-             grep -q "REACT_APP_API_URL" react-flask/client-side/netlify.toml 2>/dev/null; then
-            echo "✓ API URL configured"
+          echo "Verifying API URL is set in netlify.toml..."
+          if grep -q "REACT_APP_API_URL" react-flask/client-side/netlify.toml 2>/dev/null; then
+            echo "✓ API URL configured in netlify.toml"
+            grep "REACT_APP_API_URL" react-flask/client-side/netlify.toml
           else
-            echo "✗ API URL not found in configuration"
+            echo "✗ API URL not found in netlify.toml"
             exit 1
           fi
 
@@ -121,14 +111,15 @@ jobs:
         run: |
           echo "Checking for potential hardcoded credentials..."
 
-          # Check for common credential patterns
-          if grep -r -i "password.*=.*['\"].*['\"]" --include="*.py" --include="*.js" react-flask/ | grep -v "PasswordHash\|password_hash\|Password:"; then
+          # Check for literal hardcoded passwords (not variable assignments)
+          if grep -r -i "password\s*=\s*['\"][^{$].*['\"]" --include="*.py" --include="*.js" react-flask/ | grep -v "PasswordHash\|password_hash\|getenv\|process.env"; then
             echo "Warning: Potential hardcoded passwords found"
           else
             echo "✓ No obvious hardcoded passwords"
           fi
 
-          if grep -r "mysql://.*:.*@" --include="*.py" --include="*.js" react-flask/; then
+          # Check for hardcoded database URLs (not f-strings or env vars)
+          if grep -r "mysql://[^{$\"'].*:.*@" --include="*.py" --include="*.js" react-flask/; then
             echo "✗ ERROR: Hardcoded database connection string found"
             exit 1
           else

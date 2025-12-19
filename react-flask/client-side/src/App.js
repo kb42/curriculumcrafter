@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import Home from './components/Home';
 import About from './components/About';
-import AddCourse from './components/AddCourse';
 import Auth from './components/Auth';  // New JWT-based authentication
 import StudentsTable from './components/StudentsTable';
 //import StudentPlansTable from './components/StudentPlansTable';
@@ -33,7 +32,6 @@ function App() {
           {/* Main pages */}
           {/* <Route path="/" element={<Home />} /> */}
           <Route path="/" element={<About />} />
-          <Route path="/add-course" element={<AddCourse />} />
           <Route path="/login" element={<Auth />} />  {/* JWT Authentication */}
 
           {/* Data-related pages */}
