@@ -4,6 +4,7 @@ import './Auth.css';
 import API_BASE_URL from '../config';
 
 function Auth() {
+  const [isAuthed, setIsAuthed] = useState(!!localStorage.getItem('token'));
   const [formMode, setFormMode] = useState('login');
   const [formData, setFormData] = useState({
     username: '',
@@ -14,9 +15,16 @@ function Auth() {
     majorid: '',
     egrad: 1,
   });
+  const [profileData, setProfileData] = useState({
+    name: '',
+    majorid: '',
+    egrad: 1,
+  });
   const [majors, setMajors] = useState([]);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  const [profileMessage, setProfileMessage] = useState('');
+  const [profileMessageType, setProfileMessageType] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,19 +43,18 @@ function Auth() {
   // Load user info if already logged in
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token && formMode === 'update') {
-      // Load current user info for update form
-      const name = localStorage.getItem('name');
-      const majorid = localStorage.getItem('majorid');
-      const egrad = localStorage.getItem('egrad');
-      setFormData(prev => ({
-        ...prev,
+    const name = localStorage.getItem('name');
+    const majorid = localStorage.getItem('majorid');
+    const egrad = localStorage.getItem('egrad');
+    if (token) {
+      setIsAuthed(true);
+      setProfileData({
         name: name || '',
         majorid: majorid || '',
-        egrad: egrad ? parseFloat(egrad) : 1
-      }));
+        egrad: egrad ? parseFloat(egrad) : 1,
+      });
     }
-  }, [formMode]);
+  }, []);
 
   const toggleForm = (mode) => {
     setFormMode(mode);
@@ -63,6 +70,8 @@ function Auth() {
       majorid: '',
       egrad: 1,
     });
+    setProfileMessage('');
+    setProfileMessageType('');
   };
 
   const handleInputChange = (e) => {
@@ -138,10 +147,6 @@ function Auth() {
       if (!formData.majorid) {
         newErrors.majorid = 'Please select a major';
       }
-    } else if (formMode === 'update') {
-      if (formData.name && formData.name.trim().length < 2) {
-        newErrors.name = 'Name must be at least 2 characters';
-      }
     }
 
     setErrors(newErrors);
@@ -178,31 +183,10 @@ function Auth() {
         majorid: formData.majorid,
         egrad: parseFloat(formData.egrad)
       };
-    } else if (formMode === 'update') {
-      endpoint = `${API_BASE_URL}/api/auth/update-profile`;
-      method = 'PUT';
-      payload = {
-        name: formData.name.trim(),
-        majorid: formData.majorid,
-        egrad: parseFloat(formData.egrad)
-      };
     }
 
     try {
       const headers = { 'Content-Type': 'application/json' };
-
-      // Add JWT token for update operation
-      if (formMode === 'update') {
-        const token = localStorage.getItem('token');
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        } else {
-          setMessage('Please login first to update your profile');
-          setMessageType('error');
-          setIsLoading(false);
-          return;
-        }
-      }
 
       const response = await fetch(endpoint, {
         method,
@@ -226,21 +210,17 @@ function Auth() {
 
           setMessage(successMessage);
           setMessageType('success');
-          setTimeout(() => navigate('/combinedpage'), 1500);
+
+          // Redirect to plans page
+          setTimeout(() => {
+            navigate('/combinedpage');
+          }, 1000);
         } else if (formMode === 'create') {
           successMessage = 'Account created successfully! Please login.';
           setMessage(successMessage);
           setMessageType('success');
           setTimeout(() => toggleForm('login'), 2000);
-        } else if (formMode === 'update') {
-          successMessage = 'Profile updated successfully!';
-          // Update stored user info
-          localStorage.setItem('name', formData.name);
-          localStorage.setItem('majorid', formData.majorid);
-          localStorage.setItem('egrad', formData.egrad);
-          setMessage(successMessage);
-          setMessageType('success');
-        }
+        } 
       } else {
         setMessage(result.error || 'Something went wrong. Please try again.');
         setMessageType('error');
@@ -272,10 +252,71 @@ function Auth() {
 
   const passwordStrength = formMode === 'create' ? getPasswordStrength(formData.password) : null;
 
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault();
+    const headers = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setProfileMessage('Please login first to update your profile');
+      setProfileMessageType('error');
+      return;
+    }
+
+    headers['Authorization'] = `Bearer ${token}`;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          name: profileData.name.trim(),
+          majorid: profileData.majorid,
+          egrad: parseFloat(profileData.egrad)
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        localStorage.setItem('name', profileData.name);
+        localStorage.setItem('majorid', profileData.majorid);
+        localStorage.setItem('egrad', profileData.egrad);
+        setProfileMessage('Profile updated successfully!');
+        setProfileMessageType('success');
+      } else {
+        setProfileMessage(result.error || 'Something went wrong. Please try again.');
+        setProfileMessageType('error');
+      }
+    } catch (err) {
+      console.error(err);
+      setProfileMessage('Error connecting to the server.');
+      setProfileMessageType('error');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('netid');
+    localStorage.removeItem('name');
+    localStorage.removeItem('majorid');
+    localStorage.removeItem('egrad');
+
+    // Dispatch custom event to notify other components (like navbar)
+    window.dispatchEvent(new Event('authChange'));
+
+    setIsAuthed(false);
+    setFormMode('login');
+    setProfileData({ name: '', majorid: '', egrad: 1 });
+    setMessage('');
+    setProfileMessage('');
+    navigate('/login');
+  };
+
   return (
     <div className="page-shell">
-      <div className="page-grid two-column auth-layout">
-        <div className="glass-card hero-card auth-hero">
+      <div className="page-grid">
+        <div className="auth-layout">
+          <div className="glass-card hero-card auth-hero">
           <div className="eyebrow">CurriculumCrafter</div>
           <h1>Plan your academic journey with clarity</h1>
           <p className="muted-strong">
@@ -290,7 +331,7 @@ function Auth() {
 
           <ul className="list-reset" style={{ marginTop: '18px' }}>
             <li>Stay signed in securely while you explore your plans</li>
-            <li>Swap between login, sign up, and profile updates instantly</li>
+            <li>Sign up quickly, then update your profile once you're logged in</li>
             <li>Built to mirror the streamlined flow from our design mockups</li>
           </ul>
         </div>
@@ -304,37 +345,38 @@ function Auth() {
                   ? 'Welcome Back'
                   : formMode === 'create'
                   ? 'Create your account'
-                  : 'Tune your profile'}
+                  : 'Account'}
               </h2>
               <p className="muted">
                 Choose a mode to continue. You can hop between tabs without losing your place.
               </p>
             </div>
+            {isAuthed && (
+              <div className="badge-row">
+                <span className="chip">Logged in as {localStorage.getItem('name') || localStorage.getItem('netid')}</span>
+                <button className="btn ghost" type="button" onClick={handleLogout}>Logout</button>
+              </div>
+            )}
           </div>
 
-          <div className="tab-switch">
-            <button
-              onClick={() => toggleForm('login')}
-              className={`tab-button ${formMode === 'login' ? 'active' : ''}`}
-              disabled={isLoading}
-            >
-              Login
-            </button>
-            <button
-              onClick={() => toggleForm('create')}
-              className={`tab-button ${formMode === 'create' ? 'active' : ''}`}
-              disabled={isLoading}
-            >
-              Sign Up
-            </button>
-            <button
-              onClick={() => toggleForm('update')}
-              className={`tab-button ${formMode === 'update' ? 'active' : ''}`}
-              disabled={isLoading}
-            >
-              Update Profile
-            </button>
-          </div>
+          {!isAuthed && (
+            <div className="tab-switch">
+              <button
+                onClick={() => toggleForm('login')}
+                className={`tab-button ${formMode === 'login' ? 'active' : ''}`}
+                disabled={isLoading}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => toggleForm('create')}
+                className={`tab-button ${formMode === 'create' ? 'active' : ''}`}
+                disabled={isLoading}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="form-grid">
             {/* Login Mode */}
@@ -535,63 +577,6 @@ function Auth() {
               </>
             )}
 
-            {/* Update Information Mode */}
-            {formMode === 'update' && (
-              <>
-                <div className="field">
-                  <label htmlFor="update-name">Full Name</label>
-                  <input
-                    type="text"
-                    id="update-name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Enter your full name"
-                    className={`input ${errors.name ? 'has-error' : ''}`}
-                    disabled={isLoading}
-                  />
-                  {errors.name && <span className="error-text">{errors.name}</span>}
-                </div>
-
-                <div className="field">
-                  <label htmlFor="update-majorid">Major</label>
-                  <select
-                    id="update-majorid"
-                    name="majorid"
-                    value={formData.majorid}
-                    onChange={handleInputChange}
-                    className="input"
-                    disabled={isLoading}
-                  >
-                    <option value="">-- Select your major --</option>
-                    {majors.map((major) => (
-                      <option key={major.MajorID} value={major.MajorID}>
-                        {major.MajorID}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="field">
-                  <label htmlFor="update-egrad">Expected Graduation (years)</label>
-                  <select
-                    id="update-egrad"
-                    name="egrad"
-                    value={formData.egrad}
-                    onChange={handleInputChange}
-                    className="input"
-                    disabled={isLoading}
-                  >
-                    {numbers.map((num) => (
-                      <option key={num} value={num}>
-                        {num} {num === 1 ? 'year' : 'years'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
-
             <button
               type="submit"
               className={`btn primary ${isLoading ? 'loading' : ''}`}
@@ -602,9 +587,7 @@ function Auth() {
               ) : (
                 formMode === 'login'
                   ? 'Login'
-                  : formMode === 'create'
-                  ? 'Create Account'
-                  : 'Update Information'
+                  : 'Create Account'
               )}
             </button>
           </form>
@@ -642,7 +625,75 @@ function Auth() {
           )}
         </div>
       </div>
+
+      {isAuthed && (
+        <div className="glass-card stack profile-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Profile</p>
+              <h3>Update your information</h3>
+            </div>
+            <span className="chip soft">Logged in</span>
+          </div>
+
+          <form className="form-grid" onSubmit={handleProfileUpdate}>
+            <div className="field">
+              <label htmlFor="profile-name">Full Name</label>
+              <input
+                type="text"
+                id="profile-name"
+                name="name"
+                value={profileData.name}
+                onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
+                className="input"
+                placeholder="Update your name"
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="profile-major">Major</label>
+              <select
+                id="profile-major"
+                name="majorid"
+                value={profileData.majorid}
+                onChange={(e) => setProfileData({ ...profileData, majorid: e.target.value })}
+                className="input"
+              >
+                <option value="">-- Select your major --</option>
+                {majors.map((major) => (
+                  <option key={major.MajorID} value={major.MajorID}>
+                    {major.MajorID}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="profile-egrad">Expected Graduation (years)</label>
+              <select
+                id="profile-egrad"
+                name="egrad"
+                value={profileData.egrad}
+                onChange={(e) => setProfileData({ ...profileData, egrad: e.target.value })}
+                className="input"
+              >
+                {numbers.map((num) => (
+                  <option key={num} value={num}>
+                    {num} {num === 1 ? 'year' : 'years'}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button className="btn primary" type="submit">Save changes</button>
+          </form>
+
+          {profileMessage && (
+            <div className={`inline-alert ${profileMessageType === 'success' ? 'success' : 'error'}`}>
+              <span>{profileMessageType === 'success' ? '✓' : '✗'}</span> {profileMessage}
+            </div>
+          )}
+        </div>
+      )}
     </div>
+  </div>
   );
 }
 

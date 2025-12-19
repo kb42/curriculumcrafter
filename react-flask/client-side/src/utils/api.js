@@ -118,5 +118,11 @@ export function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('netid');
   localStorage.removeItem('name');
+  localStorage.removeItem('majorid');
+  localStorage.removeItem('egrad');
+
+  // Dispatch custom event to notify other components
+  window.dispatchEvent(new Event('authChange'));
+
   window.location.href = '/login';
 }
