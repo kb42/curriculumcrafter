@@ -189,6 +189,9 @@ function CombinedPageJWT() {
             </div>
             <div className="badge-row">
               <span className="tag accent">{plans.length} plan{plans.length === 1 ? '' : 's'}</span>
+              <button className="btn subtle" onClick={() => navigate('/login')}>
+                Update Info
+              </button>
               <button className="btn ghost" onClick={handleLogout}>
                 Logout
               </button>
