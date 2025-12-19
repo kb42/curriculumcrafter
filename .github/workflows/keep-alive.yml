@@ -1,0 +1,53 @@
+name: Keep Services Alive
+
+on:
+  schedule:
+    # Runs twice daily to keep Aiven database active (free tier powers down after ~3 days)
+    # Times: 00:00 and 12:00 UTC
+    - cron: '0 0,12 * * *'
+
+  # Allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  ping-services:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping API Health Endpoint
+        run: |
+          echo "Checking API health..."
+          response=$(curl -s -w "\n%{http_code}" https://curriculumcrafter-api.onrender.com/api/health)
+          status_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response: $body"
+          echo "Status Code: $status_code"
+
+          if [ "$status_code" -eq 200 ]; then
+            echo "API is healthy"
+          else
+            echo "WARNING: API returned status $status_code"
+            exit 1
+          fi
+
+      - name: Query Database
+        run: |
+          echo "Querying database to keep it active..."
+          response=$(curl -s -w "\n%{http_code}" https://curriculumcrafter-api.onrender.com/api/courses)
+          status_code=$(echo "$response" | tail -n1)
+
+          if [ "$status_code" -eq 200 ]; then
+            echo "Database connection successful"
+          else
+            echo "WARNING: Database query failed with status $status_code"
+            exit 1
+          fi
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "All services are alive and healthy"
+          echo "Render API: Online"
+          echo "Aiven MySQL: Connected"
+          echo "Timestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
