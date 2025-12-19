@@ -1,19 +1,94 @@
 .quick-dock {
   position: fixed;
-  right: 20px;
-  bottom: 20px;
+  right: 18px;
+  bottom: 18px;
   z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.dock-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #041226;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(34, 211, 238, 0.28);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dock-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px rgba(34, 211, 238, 0.35);
+}
+
+.dock-toggle__label {
+  letter-spacing: 0.02em;
+}
+
+.hamburger {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 18px;
+}
+
+.hamburger span {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: #041226;
+  border-radius: 999px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.hamburger.open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.dock-panel {
+  width: 260px;
   padding: 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   backdrop-filter: blur(10px);
-  min-width: 220px;
- }
+  transform: translateY(12px) scale(0.98);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  box-shadow: var(--shadow);
+  position: absolute;
+  bottom: 58px;
+  right: 0;
+}
+
+.quick-dock.open .dock-panel {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
 
 .quick-dock__title {
   font-weight: 700;
   color: var(--muted-strong);
   margin-bottom: 10px;
   letter-spacing: 0.02em;
+  display: none;
 }
 
 .quick-dock__links {
@@ -26,14 +101,34 @@
   justify-content: center;
 }
 
+.dock-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 45;
+}
+
+.dock-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 @media (max-width: 640px) {
   .quick-dock {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .dock-panel {
+    width: min(320px, calc(100vw - 48px));
+    right: 0;
+    transform: translateY(12px) scale(0.98);
   }
 
   .quick-dock__links {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
 }

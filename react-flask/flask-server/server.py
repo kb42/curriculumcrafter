@@ -111,6 +111,49 @@ def get_prerequisites(courseid):
     prerequisites = execute_query(query, (courseid,))
     return jsonify(prerequisites)
 
+@app.route('/api/course', methods=['POST'])
+def add_course():
+    data = request.get_json()
+    planid = data.get('planid')
+    courseid = data.get('courseid', '').strip().upper()
+    semester = data.get('semester', '').strip().upper()
+
+    if not all([planid, courseid, semester]):
+        return jsonify({"error": "All fields (planid, courseid, semester) are required"}), 400
+
+    # Check plan exists
+    plan_exists = execute_query("SELECT 1 FROM Academic_Plan WHERE PlanID = ?", (planid,), one=True)
+    if not plan_exists:
+        return jsonify({"error": f"PlanID {planid} does not exist"}), 404
+
+    # Check course exists
+    course_exists = execute_query(
+        "SELECT 1 FROM Course_Catalog WHERE LOWER(CourseID) = LOWER(?)",
+        (courseid,),
+        one=True
+    )
+    if not course_exists:
+        return jsonify({"error": f"CourseID {courseid} does not exist in Course_Catalog"}), 404
+
+    # Check for duplicate
+    duplicate = execute_query(
+        "SELECT 1 FROM Planned_Course WHERE PlanID = ? AND CourseID = ?",
+        (planid, courseid),
+        one=True
+    )
+    if duplicate:
+        return jsonify({"error": f"Course {courseid} is already added to PlanID {planid}"}), 409
+
+    try:
+        execute_query(
+            "INSERT INTO Planned_Course (PlanID, CourseID, Semester) VALUES (?, ?, ?)",
+            (planid, courseid, semester),
+            commit=True
+        )
+        return jsonify({"message": f"Course {courseid} added to PlanID {planid} successfully"}), 201
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
 @app.route('/api/create-account', methods=['POST'])
 def create_account():
     data = request.get_json()
