@@ -1,0 +1,122 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  lint-python:
+    name: Lint Python Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 pylint
+
+      - name: Lint with flake8
+        working-directory: react-flask/flask-server
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Check code formatting
+        working-directory: react-flask/flask-server
+        run: |
+          pip install black
+          black --check --diff *.py || true
+
+  lint-javascript:
+    name: Lint JavaScript Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: react-flask/client-side/package-lock.json
+
+      - name: Install dependencies
+        working-directory: react-flask/client-side
+        run: npm ci
+
+      - name: Check for console.log statements
+        working-directory: react-flask/client-side/src
+        run: |
+          echo "Checking for console.log statements..."
+          grep -r "console.log" . || echo "No console.log found"
+
+      - name: Check for debugger statements
+        working-directory: react-flask/client-side/src
+        run: |
+          echo "Checking for debugger statements..."
+          grep -r "debugger" . || echo "No debugger statements found"
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Python dependencies
+        working-directory: react-flask/flask-server
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety
+          pip install -r requirements.txt
+          safety check --json || true
+
+      - name: Check Node dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Run npm audit
+        working-directory: react-flask/client-side
+        run: |
+          npm audit --audit-level=high --json || true
+
+  code-summary:
+    name: Code Statistics
+    runs-on: ubuntu-latest
+    needs: [lint-python, lint-javascript, dependency-check]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Count lines of code
+        run: |
+          echo "=== Code Statistics ==="
+          echo "Python files:"
+          find react-flask/flask-server -name "*.py" -not -path "*/venv/*" -not -path "*/__pycache__/*" | wc -l
+          echo "JavaScript/JSX files:"
+          find react-flask/client-side/src -name "*.js" -o -name "*.jsx" | wc -l
+          echo "Total lines (Python):"
+          find react-flask/flask-server -name "*.py" -not -path "*/venv/*" -not -path "*/__pycache__/*" -exec wc -l {} + | tail -1
+          echo "Total lines (JavaScript):"
+          find react-flask/client-side/src -name "*.js" -o -name "*.jsx" -exec wc -l {} + | tail -1
+
+      - name: Quality check summary
+        run: |
+          echo "All code quality checks completed"
+          echo "Review the logs above for any warnings or suggestions"

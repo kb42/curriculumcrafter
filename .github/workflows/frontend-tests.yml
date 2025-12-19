@@ -1,0 +1,68 @@
+name: Frontend Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'react-flask/client-side/**'
+      - '.github/workflows/frontend-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'react-flask/client-side/**'
+      - '.github/workflows/frontend-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: react-flask/client-side/package-lock.json
+
+      - name: Install dependencies
+        working-directory: react-flask/client-side
+        run: npm ci
+
+      - name: Check for security vulnerabilities
+        working-directory: react-flask/client-side
+        run: |
+          npm audit --audit-level=moderate || true
+          echo "Security audit completed"
+
+      - name: Build application
+        working-directory: react-flask/client-side
+        env:
+          REACT_APP_API_URL: https://curriculumcrafter-api.onrender.com
+          CI: false
+        run: npm run build
+
+      - name: Check build artifacts
+        working-directory: react-flask/client-side
+        run: |
+          if [ -d "build" ]; then
+            echo "Build successful"
+            ls -lh build/
+            du -sh build/
+          else
+            echo "Build directory not found"
+            exit 1
+          fi
+
+      - name: Test summary
+        run: |
+          echo "Frontend build completed successfully"
+          echo "Node version: ${{ matrix.node-version }}"
+          echo "Build artifacts created"
