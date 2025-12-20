@@ -1,0 +1,29 @@
+# Git
+.git/
+.gitignore
+.github/
+
+# Documentation
+*.md
+doc/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+venv/
+flask_env/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Environment
+.env
+.env.local
